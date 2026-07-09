@@ -32,7 +32,6 @@ export default function ReservaForm() {
   const [whatsapp, setWhatsapp] = useState("");
   const [primeraVez, setPrimeraVez] = useState(false);
   const [nacimiento, setNacimiento] = useState("");
-  const [metodo, setMetodo] = useState<"transferencia" | "efectivo" | "">("");
   const [comprobante, setComprobante] = useState<File | null>(null);
   const [error, setError] = useState("");
 
@@ -65,8 +64,7 @@ export default function ReservaForm() {
       return setError("Escribe un WhatsApp válido de 10 dígitos.");
     if (primeraVez && !nacimiento)
       return setError("Escribe tu fecha de nacimiento.");
-    if (!metodo) return setError("Elige cómo pagarás el anticipo.");
-    if (metodo === "transferencia" && !comprobante)
+    if (!comprobante)
       return setError("Sube tu comprobante de transferencia.");
 
     // TODO: aquí se guardará la reserva en la base de datos (siguiente paso).
@@ -153,61 +151,29 @@ export default function ReservaForm() {
             Tu anticipo: ${anticipo}
           </h3>
           <p className="mt-1 text-sm text-muted">
-            Aparta tu lugar con el 50%. Elige cómo pagarlo:
+            Aparta tu lugar con el 50% por transferencia.
           </p>
-
-          <div className="mt-3 space-y-3">
-            <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-line p-3 text-sm">
-              <input
-                type="radio"
-                name="metodo"
-                checked={metodo === "transferencia"}
-                onChange={() => setMetodo("transferencia")}
-                className="mt-1 accent-wine"
-              />
-              <span>
-                <strong>Transferencia</strong> (subo mi comprobante)
-              </span>
+          <div className="mt-3 rounded-xl bg-beige/60 p-4 text-sm">
+            <p className="text-ink">Haz tu transferencia a:</p>
+            <p className="mt-2">
+              <span className="text-muted">CLABE:</span>{" "}
+              <strong>{pago.clabe}</strong>
+            </p>
+            <p>
+              <span className="text-muted">Beneficiario:</span> {pago.beneficiario}
+            </p>
+            <p>
+              <span className="text-muted">Banco:</span> {pago.banco}
+            </p>
+            <label className="mt-3 block text-sm font-medium">
+              Sube tu comprobante:
             </label>
-
-            {metodo === "transferencia" && (
-              <div className="rounded-xl bg-beige/60 p-4 text-sm">
-                <p className="text-ink">Haz tu transferencia a:</p>
-                <p className="mt-2">
-                  <span className="text-muted">CLABE:</span>{" "}
-                  <strong>{pago.clabe}</strong>
-                </p>
-                <p>
-                  <span className="text-muted">Beneficiario:</span> {pago.beneficiario}
-                </p>
-                <p>
-                  <span className="text-muted">Banco:</span> {pago.banco}
-                </p>
-                <label className="mt-3 block text-sm font-medium">
-                  Sube tu comprobante:
-                </label>
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  onChange={(e) => setComprobante(e.target.files?.[0] ?? null)}
-                  className="mt-1 block w-full text-sm"
-                />
-              </div>
-            )}
-
-            <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-line p-3 text-sm">
-              <input
-                type="radio"
-                name="metodo"
-                checked={metodo === "efectivo"}
-                onChange={() => setMetodo("efectivo")}
-                className="mt-1 accent-wine"
-              />
-              <span>
-                <strong>Efectivo en la cita</strong>{" "}
-                <span className="text-muted">(sujeto a confirmación de esma)</span>
-              </span>
-            </label>
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setComprobante(e.target.files?.[0] ?? null)}
+              className="mt-1 block w-full text-sm"
+            />
           </div>
         </div>
 
