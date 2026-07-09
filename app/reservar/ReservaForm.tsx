@@ -1,18 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   servicios,
   categorias,
   pago,
   politicaCancelacion,
 } from "@/app/lib/servicios";
-import {
-  generarSlots,
-  estaAbierto,
-  nombreDia,
-  rangoFechas,
-} from "@/app/lib/disponibilidad";
+import { estaAbierto, nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
 
 function duracionTexto(min: number): string {
   const h = Math.floor(min / 60);
@@ -20,11 +15,22 @@ function duracionTexto(min: number): string {
   return [h > 0 ? `${h} h` : "", m > 0 ? `${m} min` : ""].filter(Boolean).join(" ");
 }
 
+function archivoABase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function ReservaForm() {
   // Paso 1: selección
   const [seleccion, setSeleccion] = useState<string[]>([]);
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
+  const [slots, setSlots] = useState<string[]>([]);
+  const [cargandoSlots, setCargandoSlots] = useState(false);
 
   // Paso 2: datos y pago
   const [paso, setPaso] = useState<1 | 2>(1);
@@ -34,6 +40,8 @@ export default function ReservaForm() {
   const [nacimiento, setNacimiento] = useState("");
   const [comprobante, setComprobante] = useState<File | null>(null);
   const [error, setError] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
 
   const elegidos = servicios.filter((s) => seleccion.includes(s.nombre));
   const totalPrecio = elegidos.reduce((a, s) => a + s.precio, 0);
@@ -43,9 +51,28 @@ export default function ReservaForm() {
   const { min, max } = useMemo(() => rangoFechas(), []);
   const abierto = fecha ? estaAbierto(fecha) : true;
 
-  const slots = useMemo(() => {
-    if (!fecha || totalMin <= 0 || !estaAbierto(fecha)) return [];
-    return generarSlots(fecha, totalMin);
+  // Consultamos al servidor las horas disponibles (excluye citas ya ocupadas).
+  useEffect(() => {
+    if (!fecha || totalMin <= 0 || !estaAbierto(fecha)) {
+      setSlots([]);
+      return;
+    }
+    let cancelado = false;
+    setCargandoSlots(true);
+    fetch(`/api/disponibilidad?fecha=${fecha}&duracion=${totalMin}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelado) setSlots(Array.isArray(d.slots) ? d.slots : []);
+      })
+      .catch(() => {
+        if (!cancelado) setSlots([]);
+      })
+      .finally(() => {
+        if (!cancelado) setCargandoSlots(false);
+      });
+    return () => {
+      cancelado = true;
+    };
   }, [fecha, totalMin]);
 
   function toggleServicio(nombre: string) {
@@ -57,19 +84,69 @@ export default function ReservaForm() {
 
   const listoSeleccion = elegidos.length > 0 && !!fecha && abierto && !!hora;
 
-  function confirmar() {
+  async function confirmar() {
     setError("");
     if (!nombre.trim()) return setError("Escribe tu nombre.");
     if (whatsapp.replace(/\D/g, "").length !== 10)
       return setError("Escribe un WhatsApp válido de 10 dígitos.");
     if (primeraVez && !nacimiento)
       return setError("Escribe tu fecha de nacimiento.");
-    if (!comprobante)
-      return setError("Sube tu comprobante de transferencia.");
+    if (!comprobante) return setError("Sube tu comprobante de transferencia.");
 
-    // TODO: aquí se guardará la reserva en la base de datos (siguiente paso).
-    alert(
-      "✅ ¡Datos completos! El guardado real se conecta en el siguiente paso (base de datos).",
+    setEnviando(true);
+    try {
+      const comprobanteData = await archivoABase64(comprobante);
+      const r = await fetch("/api/reservas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: nombre.trim(),
+          whatsapp,
+          primera_vez: primeraVez,
+          fecha_nacimiento: primeraVez ? nacimiento : null,
+          servicios: elegidos.map((s) => s.nombre).join(" + "),
+          total: totalPrecio,
+          anticipo,
+          fecha_cita: fecha,
+          hora_cita: hora,
+          duracion_min: totalMin,
+          comprobante: comprobanteData,
+        }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) throw new Error(data.error || "No se pudo guardar.");
+      setEnviado(true);
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Hubo un problema. Intenta de nuevo.",
+      );
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  // ===== Pantalla de éxito =====
+  if (enviado) {
+    return (
+      <div className="mt-8 rounded-2xl border border-line bg-beige/50 p-8 text-center">
+        <div className="text-5xl">💖</div>
+        <h2 className="mt-4 font-display text-2xl font-bold text-ink">
+          ¡Reserva recibida!
+        </h2>
+        <p className="mt-2 text-muted">
+          Gracias, {nombre.split(" ")[0]}. Recibimos tu solicitud para el{" "}
+          <strong>
+            {nombreDia(fecha)} {fecha}
+          </strong>{" "}
+          a las <strong>{hora}</strong>.
+        </p>
+        <p className="mt-3 text-sm text-muted">
+          Revisaremos tu comprobante y te confirmaremos por WhatsApp. 💅
+        </p>
+        <p className="mt-4 rounded-xl border border-line bg-white p-4 text-xs text-muted">
+          {politicaCancelacion}
+        </p>
+      </div>
     );
   }
 
@@ -85,7 +162,6 @@ export default function ReservaForm() {
           ← Editar servicios / fecha
         </button>
 
-        {/* Resumen compacto */}
         <div className="rounded-2xl border border-line bg-beige/50 p-5 text-sm">
           <div className="font-medium text-ink">
             {elegidos.map((s) => s.nombre).join(" + ")}
@@ -101,7 +177,6 @@ export default function ReservaForm() {
           </div>
         </div>
 
-        {/* Datos de la clienta */}
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">Nombre</label>
@@ -145,7 +220,6 @@ export default function ReservaForm() {
           )}
         </div>
 
-        {/* Anticipo */}
         <div>
           <h3 className="font-display text-lg font-bold text-wine">
             Tu anticipo: ${anticipo}
@@ -185,7 +259,6 @@ export default function ReservaForm() {
           </div>
         </div>
 
-        {/* Política */}
         <p className="rounded-xl border border-line bg-white p-4 text-xs text-muted">
           {politicaCancelacion}
         </p>
@@ -195,9 +268,10 @@ export default function ReservaForm() {
         <button
           type="button"
           onClick={confirmar}
-          className="w-full rounded-full bg-wine px-6 py-3 font-semibold text-white transition-colors hover:bg-wine-light"
+          disabled={enviando}
+          className="w-full rounded-full bg-wine px-6 py-3 font-semibold text-white transition-colors hover:bg-wine-light disabled:opacity-60"
         >
-          Confirmar reserva
+          {enviando ? "Enviando..." : "Confirmar reserva"}
         </button>
       </div>
     );
@@ -295,7 +369,9 @@ export default function ReservaForm() {
           <h2 className="font-display text-xl font-bold text-wine">
             3. Elige la hora
           </h2>
-          {slots.length === 0 ? (
+          {cargandoSlots ? (
+            <p className="mt-2 text-sm text-muted">Buscando horarios…</p>
+          ) : slots.length === 0 ? (
             <p className="mt-2 text-sm text-muted">
               No hay horarios disponibles ese día para los servicios elegidos.
               Prueba con otro día o menos servicios.

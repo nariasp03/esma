@@ -81,3 +81,20 @@ export function rangoFechas(): { min: string; max: string } {
   max.setDate(max.getDate() + MAX_DIAS);
   return { min: fechaAStr(min), max: fechaAStr(max) };
 }
+
+// Igual que generarSlots, pero quita las horas que chocan con citas ya
+// ocupadas (respetando el descanso BUFFER_MIN entre citas).
+export function slotsDisponibles(
+  fechaStr: string,
+  duracionMin: number,
+  ocupados: { inicio: number; fin: number }[],
+): string[] {
+  return generarSlots(fechaStr, duracionMin).filter((hhmm) => {
+    const t = aMinutos(hhmm);
+    const finT = t + duracionMin;
+    // Hay conflicto si no queda el descanso mínimo entre esta cita y otra.
+    return !ocupados.some(
+      (o) => t < o.fin + BUFFER_MIN && o.inicio < finT + BUFFER_MIN,
+    );
+  });
+}
