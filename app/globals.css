@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Colores de marca esma: tinto, beige, negro, blanco */
+  --color-wine: #7a1f3a;
+  --color-wine-dark: #561026;
+  --color-wine-light: #a03e59;
+
+  --color-beige: #f5efe6;
+  --color-beige-dark: #e8dccb;
+
+  --color-ink: #201a1c;
+  --color-muted: #6f6470;
+  --color-line: #e7ddd0;
+
+  /* Tipografía */
+  --font-display: var(--font-playfair);
+  --font-sans: var(--font-inter);
+}
+
+body {
+  background-color: #ffffff;
+  color: #201a1c;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
