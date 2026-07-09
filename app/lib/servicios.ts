@@ -31,3 +31,14 @@ export const negocio = {
   instagram: "https://www.instagram.com/esma.ags",
   instagramUser: "@esma.ags",
 };
+
+// Datos para el anticipo (transferencia SPEI)
+export const pago = {
+  clabe: "722969016430797626",
+  beneficiario: "Martha Esperanza Jimenez Perez",
+  banco: "Mercado Pago",
+};
+
+// Texto de la política de cancelación (se muestra al reservar)
+export const politicaCancelacion =
+  "Con 24 hrs de anticipación es válido el reembolso de tu anticipo. Con menos tiempo el anticipo no se reembolsa. Gracias por respetar mi tiempo y el de las demás clientas 💖";

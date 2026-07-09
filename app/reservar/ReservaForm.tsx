@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { servicios, categorias } from "@/app/lib/servicios";
+import {
+  servicios,
+  categorias,
+  pago,
+  politicaCancelacion,
+} from "@/app/lib/servicios";
 import {
   generarSlots,
   estaAbierto,
@@ -16,9 +21,20 @@ function duracionTexto(min: number): string {
 }
 
 export default function ReservaForm() {
+  // Paso 1: selección
   const [seleccion, setSeleccion] = useState<string[]>([]);
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
+
+  // Paso 2: datos y pago
+  const [paso, setPaso] = useState<1 | 2>(1);
+  const [nombre, setNombre] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [primeraVez, setPrimeraVez] = useState(false);
+  const [nacimiento, setNacimiento] = useState("");
+  const [metodo, setMetodo] = useState<"transferencia" | "efectivo" | "">("");
+  const [comprobante, setComprobante] = useState<File | null>(null);
+  const [error, setError] = useState("");
 
   const elegidos = servicios.filter((s) => seleccion.includes(s.nombre));
   const totalPrecio = elegidos.reduce((a, s) => a + s.precio, 0);
@@ -36,17 +52,187 @@ export default function ReservaForm() {
   function toggleServicio(nombre: string) {
     setHora("");
     setSeleccion((prev) =>
-      prev.includes(nombre)
-        ? prev.filter((n) => n !== nombre)
-        : [...prev, nombre],
+      prev.includes(nombre) ? prev.filter((n) => n !== nombre) : [...prev, nombre],
     );
   }
 
-  const listo = elegidos.length > 0 && !!fecha && abierto && !!hora;
+  const listoSeleccion = elegidos.length > 0 && !!fecha && abierto && !!hora;
 
+  function confirmar() {
+    setError("");
+    if (!nombre.trim()) return setError("Escribe tu nombre.");
+    if (whatsapp.replace(/\D/g, "").length !== 10)
+      return setError("Escribe un WhatsApp válido de 10 dígitos.");
+    if (primeraVez && !nacimiento)
+      return setError("Escribe tu fecha de nacimiento.");
+    if (!metodo) return setError("Elige cómo pagarás el anticipo.");
+    if (metodo === "transferencia" && !comprobante)
+      return setError("Sube tu comprobante de transferencia.");
+
+    // TODO: aquí se guardará la reserva en la base de datos (siguiente paso).
+    alert(
+      "✅ ¡Datos completos! El guardado real se conecta en el siguiente paso (base de datos).",
+    );
+  }
+
+  // ===== PASO 2: datos y pago =====
+  if (paso === 2) {
+    return (
+      <div className="mt-8 space-y-6">
+        <button
+          type="button"
+          onClick={() => setPaso(1)}
+          className="text-sm text-wine hover:underline"
+        >
+          ← Editar servicios / fecha
+        </button>
+
+        {/* Resumen compacto */}
+        <div className="rounded-2xl border border-line bg-beige/50 p-5 text-sm">
+          <div className="font-medium text-ink">
+            {elegidos.map((s) => s.nombre).join(" + ")}
+          </div>
+          <div className="mt-1 text-muted">
+            📅 {nombreDia(fecha)} {fecha} · 🕒 {hora}
+          </div>
+          <div className="mt-2 font-display text-lg font-bold text-wine">
+            Anticipo: ${anticipo}{" "}
+            <span className="text-sm font-normal text-muted">
+              (de ${totalPrecio} total)
+            </span>
+          </div>
+        </div>
+
+        {/* Datos de la clienta */}
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Nombre</label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">WhatsApp</label>
+            <input
+              type="tel"
+              inputMode="numeric"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d\s-]/g, ""))}
+              placeholder="449 123 4567"
+              className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={primeraVez}
+              onChange={(e) => setPrimeraVez(e.target.checked)}
+              className="h-4 w-4 accent-wine"
+            />
+            Es mi primera vez en esma
+          </label>
+          {primeraVez && (
+            <div>
+              <label className="text-sm font-medium">Fecha de nacimiento</label>
+              <input
+                type="date"
+                value={nacimiento}
+                onChange={(e) => setNacimiento(e.target.value)}
+                className="mt-1 rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Anticipo */}
+        <div>
+          <h3 className="font-display text-lg font-bold text-wine">
+            Tu anticipo: ${anticipo}
+          </h3>
+          <p className="mt-1 text-sm text-muted">
+            Aparta tu lugar con el 50%. Elige cómo pagarlo:
+          </p>
+
+          <div className="mt-3 space-y-3">
+            <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-line p-3 text-sm">
+              <input
+                type="radio"
+                name="metodo"
+                checked={metodo === "transferencia"}
+                onChange={() => setMetodo("transferencia")}
+                className="mt-1 accent-wine"
+              />
+              <span>
+                <strong>Transferencia</strong> (subo mi comprobante)
+              </span>
+            </label>
+
+            {metodo === "transferencia" && (
+              <div className="rounded-xl bg-beige/60 p-4 text-sm">
+                <p className="text-ink">Haz tu transferencia a:</p>
+                <p className="mt-2">
+                  <span className="text-muted">CLABE:</span>{" "}
+                  <strong>{pago.clabe}</strong>
+                </p>
+                <p>
+                  <span className="text-muted">Beneficiario:</span> {pago.beneficiario}
+                </p>
+                <p>
+                  <span className="text-muted">Banco:</span> {pago.banco}
+                </p>
+                <label className="mt-3 block text-sm font-medium">
+                  Sube tu comprobante:
+                </label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setComprobante(e.target.files?.[0] ?? null)}
+                  className="mt-1 block w-full text-sm"
+                />
+              </div>
+            )}
+
+            <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-line p-3 text-sm">
+              <input
+                type="radio"
+                name="metodo"
+                checked={metodo === "efectivo"}
+                onChange={() => setMetodo("efectivo")}
+                className="mt-1 accent-wine"
+              />
+              <span>
+                <strong>Efectivo en la cita</strong>{" "}
+                <span className="text-muted">(sujeto a confirmación de esma)</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        {/* Política */}
+        <p className="rounded-xl border border-line bg-white p-4 text-xs text-muted">
+          {politicaCancelacion}
+        </p>
+
+        {error && <p className="text-sm text-danger">{error}</p>}
+
+        <button
+          type="button"
+          onClick={confirmar}
+          className="w-full rounded-full bg-wine px-6 py-3 font-semibold text-white transition-colors hover:bg-wine-light"
+        >
+          Confirmar reserva
+        </button>
+      </div>
+    );
+  }
+
+  // ===== PASO 1: selección =====
   return (
     <div className="mt-8 space-y-8">
-      {/* Paso 1: Servicios */}
+      {/* Servicios */}
       <section>
         <h2 className="font-display text-xl font-bold text-wine">
           1. Elige tus servicios
@@ -100,7 +286,7 @@ export default function ReservaForm() {
         </div>
       </section>
 
-      {/* Paso 2: Día */}
+      {/* Día */}
       {elegidos.length > 0 && (
         <section>
           <h2 className="font-display text-xl font-bold text-wine">
@@ -129,7 +315,7 @@ export default function ReservaForm() {
         </section>
       )}
 
-      {/* Paso 3: Hora */}
+      {/* Hora */}
       {elegidos.length > 0 && fecha && abierto && (
         <section>
           <h2 className="font-display text-xl font-bold text-wine">
@@ -137,8 +323,8 @@ export default function ReservaForm() {
           </h2>
           {slots.length === 0 ? (
             <p className="mt-2 text-sm text-muted">
-              No hay horarios disponibles ese día para los servicios elegidos
-              (no alcanza el tiempo). Prueba con otro día o menos servicios.
+              No hay horarios disponibles ese día para los servicios elegidos.
+              Prueba con otro día o menos servicios.
             </p>
           ) : (
             <div className="mt-3 flex flex-wrap gap-2">
@@ -195,15 +381,11 @@ export default function ReservaForm() {
 
           <button
             type="button"
-            disabled={!listo}
-            onClick={() =>
-              alert(
-                "¡Siguiente paso en construcción! Aquí pedirás tus datos y verás cómo pagar tu anticipo.",
-              )
-            }
+            disabled={!listoSeleccion}
+            onClick={() => setPaso(2)}
             className="mt-5 w-full rounded-full bg-wine px-6 py-3 font-semibold text-white transition-colors hover:bg-wine-light disabled:opacity-50"
           >
-            {listo ? "Continuar" : "Elige servicios, día y hora"}
+            {listoSeleccion ? "Continuar" : "Elige servicios, día y hora"}
           </button>
         </section>
       )}
