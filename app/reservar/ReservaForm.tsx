@@ -168,12 +168,20 @@ export default function ReservaForm() {
             <label className="mt-3 block text-sm font-medium">
               Sube tu comprobante:
             </label>
-            <input
-              type="file"
-              accept="image/*,application/pdf"
-              onChange={(e) => setComprobante(e.target.files?.[0] ?? null)}
-              className="mt-1 block w-full text-sm"
-            />
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <label className="cursor-pointer rounded-full bg-wine px-5 py-2 text-xs font-semibold text-white transition-colors hover:bg-wine-light">
+                Elegir archivo
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setComprobante(e.target.files?.[0] ?? null)}
+                  className="hidden"
+                />
+              </label>
+              <span className="text-xs text-muted">
+                {comprobante ? comprobante.name : "Ningún archivo seleccionado"}
+              </span>
+            </div>
           </div>
         </div>
 
