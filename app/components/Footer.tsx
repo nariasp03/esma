@@ -19,6 +19,16 @@ export default function Footer() {
           </h3>
           <p className="mt-3 text-sm text-white/80">{negocio.direccion}</p>
           <p className="text-sm text-white/80">{negocio.ciudad}</p>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+              `${negocio.direccion}, ${negocio.ciudad}`,
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-block text-sm font-medium text-beige-dark hover:text-white hover:underline"
+          >
+            📍 Ver en el mapa →
+          </a>
           <p className="mt-2 text-sm text-white/70">Sólo con cita en el local.</p>
         </div>
 
