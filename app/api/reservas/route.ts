@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { insertarReserva, ocupadosDelDia } from "@/app/lib/db";
 import { slotsDisponibles, estaAbierto } from "@/app/lib/disponibilidad";
+import { avisarNuevaReserva } from "@/app/lib/notificar";
 
 // POST /api/reservas — guarda una reserva nueva (desde el formulario público).
 export async function POST(request: Request) {
@@ -57,6 +58,16 @@ export async function POST(request: Request) {
       comprobante: typeof b.comprobante === "string" ? b.comprobante : null,
       metodo_pago: "transferencia",
       cliente_id: typeof b.cliente_id === "number" ? b.cliente_id : null,
+    });
+
+    // Avisamos a la prima por WhatsApp (si CallMeBot está configurado).
+    await avisarNuevaReserva({
+      nombre,
+      whatsapp,
+      servicios: s(b.servicios),
+      fecha_cita,
+      hora_cita,
+      anticipo: Number(b.anticipo) || 0,
     });
 
     return NextResponse.json({ ok: true, id, token });
