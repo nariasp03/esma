@@ -1,14 +1,7 @@
 import Link from "next/link";
-import { servicios, negocio } from "@/app/lib/servicios";
+import { negocio } from "@/app/lib/servicios";
 
 export default function Home() {
-  // Unos cuantos servicios para mostrar en el inicio.
-  const destacados = servicios.filter((s) =>
-    ["Gelish", "Nivelación con rubber", "Extensión de uña acrílica (largo #1 o #2)"].includes(
-      s.nombre,
-    ),
-  );
-
   return (
     <div>
       {/* Hero */}
@@ -38,45 +31,6 @@ export default function Home() {
               Ver servicios
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Servicios destacados */}
-      <section className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-        <div className="text-center">
-          <h2 className="font-display text-3xl font-bold text-ink sm:text-4xl">
-            Nuestros servicios
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-muted">
-            Algunos de nuestros favoritos. Consulta la lista completa con precios.
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
-          {destacados.map((s) => (
-            <div
-              key={s.nombre}
-              className="rounded-2xl border border-line bg-beige/40 p-6 text-center"
-            >
-              <div className="text-3xl">💅</div>
-              <h3 className="mt-4 font-display text-xl font-bold text-ink">
-                {s.nombre}
-              </h3>
-              <p className="mt-1 text-sm text-muted">{s.duracion}</p>
-              <p className="mt-3 font-display text-2xl font-bold text-wine">
-                ${s.precio}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-10 text-center">
-          <Link
-            href="/servicios"
-            className="rounded-full bg-wine px-8 py-3 font-semibold text-white transition-colors hover:bg-wine-light"
-          >
-            Ver todos los servicios
-          </Link>
         </div>
       </section>
     </div>
