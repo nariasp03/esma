@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { negocio } from "@/app/lib/servicios";
+import InstagramIcon from "./InstagramIcon";
 
 export default function Footer() {
   return (
@@ -29,9 +30,10 @@ export default function Footer() {
             href={negocio.instagram}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-block text-sm text-white/85 hover:text-white"
+            className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20"
           >
-            📸 Instagram {negocio.instagramUser}
+            <InstagramIcon className="h-5 w-5" />
+            {negocio.instagramUser}
           </a>
         </div>
       </div>
