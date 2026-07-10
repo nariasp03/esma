@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { randomUUID } from "crypto";
 
 const globalForPg = globalThis as unknown as { pgPool?: Pool };
 
@@ -49,6 +50,7 @@ export type Reserva = {
   metodo_pago: string;
   estado: string;
   confirmada_clienta: boolean;
+  token: string | null;
 };
 
 let tablaLista = false;
@@ -71,9 +73,15 @@ async function ensureTable() {
       comprobante TEXT,
       metodo_pago TEXT NOT NULL DEFAULT 'transferencia',
       estado TEXT NOT NULL DEFAULT 'Pendiente',
-      confirmada_clienta BOOLEAN NOT NULL DEFAULT false
+      confirmada_clienta BOOLEAN NOT NULL DEFAULT false,
+      token TEXT
     );
   `);
+  // Para tablas ya existentes, añadimos el token si falta.
+  await pool.query(`ALTER TABLE reservas ADD COLUMN IF NOT EXISTS token TEXT;`);
+  await pool.query(
+    `CREATE UNIQUE INDEX IF NOT EXISTS reservas_token_idx ON reservas(token);`,
+  );
   tablaLista = true;
 }
 
@@ -92,13 +100,16 @@ export type NuevaReserva = {
   metodo_pago: string;
 };
 
-export async function insertarReserva(r: NuevaReserva): Promise<number> {
+export async function insertarReserva(
+  r: NuevaReserva,
+): Promise<{ id: number; token: string }> {
   await ensureTable();
+  const token = randomUUID();
   const res = await pool.query(
     `INSERT INTO reservas
        (nombre, whatsapp, primera_vez, fecha_nacimiento, servicios, total,
-        anticipo, fecha_cita, hora_cita, duracion_min, comprobante, metodo_pago)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+        anticipo, fecha_cita, hora_cita, duracion_min, comprobante, metodo_pago, token)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
      RETURNING id`,
     [
       r.nombre,
@@ -113,21 +124,23 @@ export async function insertarReserva(r: NuevaReserva): Promise<number> {
       r.duracion_min,
       r.comprobante,
       r.metodo_pago,
+      token,
     ],
   );
-  return res.rows[0].id as number;
+  return { id: res.rows[0].id as number, token };
 }
 
-// Citas ocupadas de un día (rangos en minutos desde medianoche), para calcular
-// la disponibilidad. Ignora las canceladas.
+// Citas ocupadas de un día (rangos en minutos desde medianoche). Ignora las
+// canceladas y, opcionalmente, una cita a excluir (útil al reagendar).
 export async function ocupadosDelDia(
   fecha: string,
+  excluirId = 0,
 ): Promise<{ inicio: number; fin: number }[]> {
   await ensureTable();
   const res = await pool.query<{ hora_cita: string; duracion_min: number }>(
     `SELECT hora_cita, duracion_min FROM reservas
-     WHERE fecha_cita = $1 AND estado <> 'Cancelada'`,
-    [fecha],
+     WHERE fecha_cita = $1 AND estado <> 'Cancelada' AND id <> $2`,
+    [fecha, excluirId],
   );
   return res.rows.map((r) => {
     const [h, m] = r.hora_cita.split(":").map(Number);
@@ -136,10 +149,56 @@ export async function ocupadosDelDia(
   });
 }
 
+export async function getReservaPorToken(
+  token: string,
+): Promise<Reserva | null> {
+  await ensureTable();
+  const r = await pool.query<Reserva>(
+    `SELECT id, creado_en, nombre, whatsapp, primera_vez,
+            to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
+            servicios, total, anticipo,
+            to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
+            hora_cita, duracion_min, comprobante, metodo_pago, estado,
+            confirmada_clienta, token
+     FROM reservas WHERE token = $1`,
+    [token],
+  );
+  return r.rows[0] ?? null;
+}
+
+export async function cancelarReserva(token: string): Promise<boolean> {
+  await ensureTable();
+  const r = await pool.query(
+    "UPDATE reservas SET estado = 'Cancelada' WHERE token = $1 RETURNING id",
+    [token],
+  );
+  return (r.rowCount ?? 0) > 0;
+}
+
+export async function reagendarReserva(
+  token: string,
+  fecha: string,
+  hora: string,
+): Promise<boolean> {
+  await ensureTable();
+  const r = await pool.query(
+    `UPDATE reservas SET fecha_cita = $1, hora_cita = $2
+     WHERE token = $3 AND estado <> 'Cancelada' RETURNING id`,
+    [fecha, hora, token],
+  );
+  return (r.rowCount ?? 0) > 0;
+}
+
 export async function listarReservas(): Promise<Reserva[]> {
   await ensureTable();
   const r = await pool.query<Reserva>(
-    "SELECT * FROM reservas ORDER BY fecha_cita, hora_cita",
+    `SELECT id, creado_en, nombre, whatsapp, primera_vez,
+            to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
+            servicios, total, anticipo,
+            to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
+            hora_cita, duracion_min, comprobante, metodo_pago, estado,
+            confirmada_clienta, token
+     FROM reservas ORDER BY fecha_cita, hora_cita`,
   );
   return r.rows;
 }

@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const id = await insertarReserva({
+    const { id, token } = await insertarReserva({
       nombre,
       whatsapp,
       primera_vez: !!b.primera_vez,
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       metodo_pago: "transferencia",
     });
 
-    return NextResponse.json({ ok: true, id });
+    return NextResponse.json({ ok: true, id, token });
   } catch {
     return NextResponse.json(
       { ok: false, error: "Error al guardar la reserva." },

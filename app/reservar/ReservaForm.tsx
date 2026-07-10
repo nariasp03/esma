@@ -123,6 +123,7 @@ export default function ReservaForm() {
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
+  const [token, setToken] = useState("");
 
   const elegidos = servicios.filter((s) => seleccion.includes(s.nombre));
   const totalPrecio = elegidos.reduce((a, s) => a + s.precio, 0);
@@ -202,6 +203,7 @@ export default function ReservaForm() {
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok || !data.ok) throw new Error(data.error || "No se pudo guardar.");
+      setToken(data.token || "");
       setEnviado(true);
     } catch (e) {
       setError(
@@ -230,6 +232,20 @@ export default function ReservaForm() {
         <p className="mt-3 text-sm text-muted">
           Revisaremos tu comprobante y te confirmaremos por WhatsApp. 💅
         </p>
+        {token && (
+          <div className="mt-4 rounded-xl border border-wine/30 bg-white p-4 text-sm">
+            <p className="text-ink">
+              💡 Guarda este enlace para <strong>cancelar o reagendar</strong> tu
+              cita cuando quieras:
+            </p>
+            <a
+              href={`/cita/${token}`}
+              className="mt-2 inline-block font-semibold text-wine hover:underline"
+            >
+              Ver / gestionar mi cita →
+            </a>
+          </div>
+        )}
         <p className="mt-4 rounded-xl border border-line bg-white p-4 text-xs text-muted">
           {politicaCancelacion}
         </p>
