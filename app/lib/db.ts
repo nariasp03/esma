@@ -93,6 +93,9 @@ async function ensureTable() {
     );
   `);
   await pool.query(
+    `CREATE UNIQUE INDEX IF NOT EXISTS clientes_telefono_idx ON clientes(telefono);`,
+  );
+  await pool.query(
     `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS cliente_id INTEGER;`,
   );
   tablaLista = true;
@@ -109,17 +112,17 @@ function soloDigitos(t: string): string {
   return t.replace(/\D/g, "");
 }
 
-export async function buscarCliente(
-  nombre: string,
+// La identidad de la cuenta es el TELÉFONO (único). El nombre es solo para
+// identificar a la clienta.
+export async function buscarClientePorTelefono(
   telefono: string,
 ): Promise<Cliente | null> {
   await ensureTable();
   const r = await pool.query<Cliente>(
     `SELECT id, nombre, telefono,
             to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento
-     FROM clientes
-     WHERE lower(trim(nombre)) = lower(trim($1)) AND telefono = $2`,
-    [nombre, soloDigitos(telefono)],
+     FROM clientes WHERE telefono = $1`,
+    [soloDigitos(telefono)],
   );
   return r.rows[0] ?? null;
 }
@@ -131,16 +134,18 @@ export async function crearCliente(
 ): Promise<Cliente> {
   await ensureTable();
   const tel = soloDigitos(telefono);
-  const existente = await buscarCliente(nombre, tel);
+  const existente = await buscarClientePorTelefono(tel);
   if (existente) {
-    if (fechaNacimiento) {
-      await pool.query(
-        "UPDATE clientes SET fecha_nacimiento = $1 WHERE id = $2",
-        [fechaNacimiento, existente.id],
-      );
-      existente.fecha_nacimiento = fechaNacimiento;
-    }
-    return existente;
+    // Ya hay cuenta con ese teléfono: actualizamos nombre y cumpleaños.
+    await pool.query(
+      "UPDATE clientes SET nombre = $1, fecha_nacimiento = COALESCE($2, fecha_nacimiento) WHERE id = $3",
+      [nombre.trim(), fechaNacimiento, existente.id],
+    );
+    return {
+      ...existente,
+      nombre: nombre.trim(),
+      fecha_nacimiento: fechaNacimiento ?? existente.fecha_nacimiento,
+    };
   }
   const r = await pool.query<Cliente>(
     `INSERT INTO clientes (nombre, telefono, fecha_nacimiento)

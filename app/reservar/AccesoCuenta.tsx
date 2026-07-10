@@ -22,7 +22,7 @@ export default function AccesoCuenta() {
       const body =
         modo === "crear"
           ? { nombre, telefono, fecha_nacimiento: nacimiento }
-          : { nombre, telefono };
+          : { telefono };
       const r = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -69,15 +69,17 @@ export default function AccesoCuenta() {
       </div>
 
       <form onSubmit={enviar} className="mt-6 space-y-4">
-        <div>
-          <label className="text-sm font-medium">Nombre completo</label>
-          <input
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            className={cls}
-          />
-        </div>
+        {modo === "crear" && (
+          <div>
+            <label className="text-sm font-medium">Nombre completo</label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              className={cls}
+            />
+          </div>
+        )}
         <div>
           <label className="text-sm font-medium">WhatsApp</label>
           <input
