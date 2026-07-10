@@ -111,13 +111,6 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold text-ink sm:text-4xl">
-          Tu cita en esma
-        </h1>
-        <p className="mt-1 text-muted">Hola, {reserva.nombre.split(" ")[0]} 💅</p>
-      </div>
-
       {/* Detalle de la cita */}
       <div className="rounded-2xl border border-line bg-beige/50 p-6">
         <div className="flex items-start justify-between gap-3">

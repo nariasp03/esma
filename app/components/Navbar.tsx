@@ -8,6 +8,7 @@ const links = [
   { href: "/", label: "Inicio" },
   { href: "/servicios", label: "Servicios" },
   { href: "/reservar", label: "Reservar" },
+  { href: "/consultar", label: "Consultar mi cita" },
 ];
 
 export default function Navbar() {

@@ -166,6 +166,26 @@ export async function getReservaPorToken(
   return r.rows[0] ?? null;
 }
 
+// Busca las citas PRÓXIMAS y no canceladas de una clienta por su nombre completo.
+export async function reservasPorNombre(nombre: string): Promise<Reserva[]> {
+  await ensureTable();
+  const r = await pool.query<Reserva>(
+    `SELECT id, creado_en, nombre, whatsapp, primera_vez,
+            to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
+            servicios, total, anticipo,
+            to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
+            hora_cita, duracion_min, NULL AS comprobante, metodo_pago, estado,
+            confirmada_clienta, token
+     FROM reservas
+     WHERE lower(trim(nombre)) = lower(trim($1))
+       AND estado <> 'Cancelada'
+       AND fecha_cita >= CURRENT_DATE
+     ORDER BY fecha_cita, hora_cita`,
+    [nombre],
+  );
+  return r.rows;
+}
+
 export async function cancelarReserva(token: string): Promise<boolean> {
   await ensureTable();
   const r = await pool.query(

@@ -37,6 +37,9 @@ export default async function CitaPage({
 
   return (
     <div className="mx-auto max-w-lg px-6 py-12 sm:py-16">
+      <h1 className="mb-6 font-display text-3xl font-bold text-ink sm:text-4xl">
+        Tu cita en esma
+      </h1>
       <GestionCita
         reserva={{
           token,
