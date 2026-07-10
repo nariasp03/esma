@@ -41,4 +41,4 @@ export const pago = {
 
 // Texto de la política de cancelación (se muestra al reservar)
 export const politicaCancelacion =
-  "Con 24 hrs de anticipación es válido el reembolso de tu anticipo. Con menos tiempo el anticipo no se reembolsa. Gracias por respetar mi tiempo y el de las demás clientas 💖";
+  "Política de cancelación: si cancelas tu cita con al menos 24 horas de anticipación, se te reembolsa tu anticipo. Si la cancelas con menos de 24 horas de anticipación, el anticipo no es reembolsable. Gracias por respetar mi tiempo y el de las demás clientas 💖";

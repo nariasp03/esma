@@ -8,6 +8,7 @@ import {
   politicaCancelacion,
 } from "@/app/lib/servicios";
 import { estaAbierto, nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
+import Calendario, { MESES } from "./Calendario";
 
 function duracionTexto(min: number): string {
   const h = Math.floor(min / 60);
@@ -22,6 +23,71 @@ function archivoABase64(file: File): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// Selector de fecha de nacimiento con menús (día / mes / año).
+function SelectorNacimiento({ onChange }: { onChange: (v: string) => void }) {
+  const [dia, setDia] = useState("");
+  const [mes, setMes] = useState("");
+  const [anio, setAnio] = useState("");
+  const anioActual = new Date().getFullYear();
+  const anios: number[] = [];
+  for (let a = anioActual; a >= 1940; a--) anios.push(a);
+
+  function actualizar(nd: string, nm: string, na: string) {
+    setDia(nd);
+    setMes(nm);
+    setAnio(na);
+    onChange(nd && nm && na ? `${na}-${nm}-${nd}` : "");
+  }
+
+  const cls =
+    "rounded-lg border border-line bg-white px-2 py-2 text-sm outline-none focus:border-wine";
+  return (
+    <div className="mt-1 flex flex-wrap gap-2">
+      <select
+        aria-label="Día"
+        value={dia}
+        onChange={(e) => actualizar(e.target.value, mes, anio)}
+        className={cls}
+      >
+        <option value="">Día</option>
+        {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map(
+          (d) => (
+            <option key={d} value={d}>
+              {Number(d)}
+            </option>
+          ),
+        )}
+      </select>
+      <select
+        aria-label="Mes"
+        value={mes}
+        onChange={(e) => actualizar(dia, e.target.value, anio)}
+        className={cls}
+      >
+        <option value="">Mes</option>
+        {MESES.map((mn, i) => (
+          <option key={i} value={String(i + 1).padStart(2, "0")}>
+            {mn}
+          </option>
+        ))}
+      </select>
+      <select
+        aria-label="Año"
+        value={anio}
+        onChange={(e) => actualizar(dia, mes, e.target.value)}
+        className={cls}
+      >
+        <option value="">Año</option>
+        {anios.map((a) => (
+          <option key={a} value={String(a)}>
+            {a}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 }
 
 function Encabezado() {
@@ -232,12 +298,7 @@ export default function ReservaForm() {
           {primeraVez && (
             <div>
               <label className="text-sm font-medium">Fecha de nacimiento</label>
-              <input
-                type="date"
-                value={nacimiento}
-                onChange={(e) => setNacimiento(e.target.value)}
-                className="mt-1 rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
-              />
+              <SelectorNacimiento onChange={setNacimiento} />
             </div>
           )}
         </div>
@@ -387,17 +448,18 @@ export default function ReservaForm() {
             Puedes reservar desde 1 semana y hasta 1 mes adelante. Cerrado los
             domingos.
           </p>
-          <input
-            type="date"
-            value={fecha}
-            min={min}
-            max={max}
-            onChange={(e) => {
-              setFecha(e.target.value);
-              setHora("");
-            }}
-            className="mt-3 rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-wine"
-          />
+          <div className="mt-3">
+            <Calendario
+              value={fecha}
+              onChange={(v) => {
+                setFecha(v);
+                setHora("");
+              }}
+              minDate={min}
+              maxDate={max}
+              diasCerrados={[0]}
+            />
+          </div>
           {fecha && !abierto && (
             <p className="mt-2 text-sm text-danger">
               El {nombreDia(fecha)} está cerrado. Por favor elige otro día.
