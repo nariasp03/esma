@@ -11,7 +11,12 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function NuevaCitaPage() {
+export default async function NuevaCitaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ servicio?: string }>;
+}) {
+  const { servicio } = await searchParams;
   const id = await sesionClienteId();
   const cliente = id ? await getClientePorId(id) : null;
   if (!cliente) redirect("/reservar");
@@ -31,6 +36,7 @@ export default async function NuevaCitaPage() {
           telefono: cliente.telefono,
           fecha_nacimiento: cliente.fecha_nacimiento,
         }}
+        servicioInicial={servicio}
       />
     </div>
   );

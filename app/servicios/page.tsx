@@ -67,7 +67,7 @@ export default function ServiciosPage() {
                       ${s.precio}
                     </div>
                     <Link
-                      href="/reservar"
+                      href={`/reservar?servicio=${encodeURIComponent(s.nombre)}`}
                       className="rounded-full bg-wine px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-wine-light"
                     >
                       Reservar

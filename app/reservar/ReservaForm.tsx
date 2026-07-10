@@ -34,9 +34,22 @@ function archivoABase64(file: File): Promise<string> {
   });
 }
 
-export default function ReservaForm({ cliente }: { cliente: Cliente }) {
-  const [seleccion, setSeleccion] = useState<string[]>([]);
-  const [abiertas, setAbiertas] = useState<string[]>([]);
+export default function ReservaForm({
+  cliente,
+  servicioInicial,
+}: {
+  cliente: Cliente;
+  servicioInicial?: string;
+}) {
+  // Si viene un servicio pre-elegido (desde la página de servicios), lo dejamos
+  // seleccionado y abrimos su categoría.
+  const inicial = servicios.find((s) => s.nombre === servicioInicial);
+  const [seleccion, setSeleccion] = useState<string[]>(
+    inicial ? [inicial.nombre] : [],
+  );
+  const [abiertas, setAbiertas] = useState<string[]>(
+    inicial ? [inicial.categoria] : [],
+  );
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [slots, setSlots] = useState<string[]>([]);
