@@ -318,7 +318,7 @@ export default function ReservaForm() {
                       </span>
                     )}
                   </span>
-                  <span className="text-wine">{abierta ? "▾" : "▸"}</span>
+                  <span className="text-wine">{abierta ? "▲" : "▼"}</span>
                 </button>
                 {abierta && (
                   <div className="space-y-2 border-t border-line p-3">
