@@ -102,6 +102,10 @@ async function ensureTable() {
   await pool.query(
     `UPDATE reservas SET estado = 'Aprobada' WHERE estado = 'Confirmada';`,
   );
+  // Marca si la clienta reagendó la cita (para la pestaña "Reagendadas").
+  await pool.query(
+    `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS reagendada BOOLEAN NOT NULL DEFAULT false;`,
+  );
   tablaLista = true;
 }
 
@@ -309,7 +313,7 @@ export async function reagendarReserva(
 ): Promise<boolean> {
   await ensureTable();
   const r = await pool.query(
-    `UPDATE reservas SET fecha_cita = $1, hora_cita = $2
+    `UPDATE reservas SET fecha_cita = $1, hora_cita = $2, reagendada = true
      WHERE token = $3 AND estado <> 'Cancelada' RETURNING id`,
     [fecha, hora, token],
   );
@@ -336,6 +340,7 @@ export async function listarReservas(): Promise<Reserva[]> {
 // lista; solo indicamos si existe. Se pide aparte al abrirlo.
 export type ReservaAdmin = Omit<Reserva, "comprobante"> & {
   tiene_comprobante: boolean;
+  reagendada: boolean;
 };
 
 export async function listarReservasAdmin(): Promise<ReservaAdmin[]> {
@@ -346,7 +351,7 @@ export async function listarReservasAdmin(): Promise<ReservaAdmin[]> {
             servicios, total, anticipo,
             to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
             hora_cita, duracion_min, metodo_pago, estado,
-            confirmada_clienta, token,
+            confirmada_clienta, token, reagendada,
             (comprobante IS NOT NULL AND comprobante <> '') AS tiene_comprobante
      FROM reservas
      ORDER BY fecha_cita DESC, hora_cita DESC`,

@@ -17,7 +17,14 @@ const colorEstado: Record<string, string> = {
   Completada: "bg-blue-100 text-blue-700",
 };
 
-const FILTROS = ["Solicitudes", "Aprobada", "Completada", "Cancelada", "Todas"] as const;
+const FILTROS = [
+  "Solicitudes",
+  "Reagendadas",
+  "Aprobada",
+  "Completada",
+  "Cancelada",
+  "Todas",
+] as const;
 type Filtro = (typeof FILTROS)[number];
 
 function hoyStr(): string {
@@ -58,6 +65,7 @@ export default function AdminPanel({
       .filter((r) => {
         if (filtro === "Todas") return true;
         if (filtro === "Solicitudes") return r.estado === "Pendiente";
+        if (filtro === "Reagendadas") return r.reagendada;
         return r.estado === filtro;
       })
       .filter((r) => (q ? r.nombre.toLowerCase().includes(q) : true))
@@ -112,7 +120,9 @@ export default function AdminPanel({
               ? reservas.length
               : f === "Solicitudes"
                 ? conteos["Pendiente"] ?? 0
-                : conteos[f] ?? 0;
+                : f === "Reagendadas"
+                  ? reservas.filter((r) => r.reagendada).length
+                  : conteos[f] ?? 0;
           return (
             <button
               key={f}
@@ -225,6 +235,11 @@ function CitaCard({
             {r.primera_vez && (
               <span className="rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-wine">
                 1ª vez
+              </span>
+            )}
+            {r.reagendada && (
+              <span className="rounded-full bg-wine/10 px-2 py-0.5 text-xs font-medium text-wine">
+                Reagendada
               </span>
             )}
           </div>

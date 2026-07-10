@@ -375,7 +375,7 @@ export default function ReservaForm({
             2. Elige el día
           </h2>
           <p className="mt-1 text-sm text-muted">
-            Puedes reservar desde 1 semana y hasta 1 mes adelante. Cerrado los
+            Puedes reservar desde 24 horas y hasta 1 mes adelante. Cerrado los
             domingos.
           </p>
           <div className="mt-3">
