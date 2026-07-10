@@ -56,6 +56,7 @@ export async function POST(request: Request) {
       duracion_min,
       comprobante: typeof b.comprobante === "string" ? b.comprobante : null,
       metodo_pago: "transferencia",
+      cliente_id: typeof b.cliente_id === "number" ? b.cliente_id : null,
     });
 
     return NextResponse.json({ ok: true, id, token });

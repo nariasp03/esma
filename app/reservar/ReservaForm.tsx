@@ -1,14 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   servicios,
   categorias,
   pago,
   politicaCancelacion,
+  DESCUENTO_CUMPLE,
 } from "@/app/lib/servicios";
 import { estaAbierto, nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
-import Calendario, { MESES } from "./Calendario";
+import Calendario from "./Calendario";
+
+type Cliente = {
+  id: number;
+  nombre: string;
+  telefono: string;
+  fecha_nacimiento: string | null;
+};
 
 function duracionTexto(min: number): string {
   const h = Math.floor(min / 60);
@@ -25,111 +34,15 @@ function archivoABase64(file: File): Promise<string> {
   });
 }
 
-// Días que tiene un mes (considera años bisiestos para febrero).
-function diasDelMes(mes: string, anio: string): number {
-  if (!mes) return 31;
-  const y = anio ? Number(anio) : 2024; // bisiesto por defecto para permitir 29 feb
-  return new Date(y, Number(mes), 0).getDate();
-}
-
-// Selector de fecha de nacimiento con menús (día / mes / año).
-function SelectorNacimiento({ onChange }: { onChange: (v: string) => void }) {
-  const [dia, setDia] = useState("");
-  const [mes, setMes] = useState("");
-  const [anio, setAnio] = useState("");
-  const anioActual = new Date().getFullYear();
-  const anios: number[] = [];
-  for (let a = anioActual; a >= 1940; a--) anios.push(a);
-
-  const maxDia = diasDelMes(mes, anio);
-
-  function actualizar(nd: string, nm: string, na: string) {
-    // Si el día ya no existe en ese mes/año (ej. 31 de febrero), lo limpiamos.
-    if (nd && Number(nd) > diasDelMes(nm, na)) nd = "";
-    setDia(nd);
-    setMes(nm);
-    setAnio(na);
-    onChange(nd && nm && na ? `${na}-${nm}-${nd}` : "");
-  }
-
-  const cls =
-    "rounded-lg border border-line bg-white px-2 py-2 text-sm outline-none focus:border-wine";
-  return (
-    <div className="mt-1 flex flex-wrap gap-2">
-      <select
-        aria-label="Día"
-        value={dia}
-        onChange={(e) => actualizar(e.target.value, mes, anio)}
-        className={cls}
-      >
-        <option value="">Día</option>
-        {Array.from({ length: maxDia }, (_, i) =>
-          String(i + 1).padStart(2, "0"),
-        ).map((d) => (
-          <option key={d} value={d}>
-            {Number(d)}
-          </option>
-        ))}
-      </select>
-      <select
-        aria-label="Mes"
-        value={mes}
-        onChange={(e) => actualizar(dia, e.target.value, anio)}
-        className={cls}
-      >
-        <option value="">Mes</option>
-        {MESES.map((mn, i) => (
-          <option key={i} value={String(i + 1).padStart(2, "0")}>
-            {mn}
-          </option>
-        ))}
-      </select>
-      <select
-        aria-label="Año"
-        value={anio}
-        onChange={(e) => actualizar(dia, mes, e.target.value)}
-        className={cls}
-      >
-        <option value="">Año</option>
-        {anios.map((a) => (
-          <option key={a} value={String(a)}>
-            {a}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-function Encabezado() {
-  return (
-    <div>
-      <h1 className="font-display text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-        Reserva tu cita
-      </h1>
-      <p className="mt-4 text-muted">
-        Elige tus servicios, el día y la hora. Apartas tu lugar con el 50% de
-        anticipo.
-      </p>
-    </div>
-  );
-}
-
-export default function ReservaForm() {
-  // Paso 1: selección
+export default function ReservaForm({ cliente }: { cliente: Cliente }) {
   const [seleccion, setSeleccion] = useState<string[]>([]);
-  const [abiertas, setAbiertas] = useState<string[]>([]); // categorías desplegadas
+  const [abiertas, setAbiertas] = useState<string[]>([]);
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [slots, setSlots] = useState<string[]>([]);
   const [cargandoSlots, setCargandoSlots] = useState(false);
 
-  // Paso 2: datos y pago
   const [paso, setPaso] = useState<1 | 2>(1);
-  const [nombre, setNombre] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
-  const [primeraVez, setPrimeraVez] = useState(false);
-  const [nacimiento, setNacimiento] = useState("");
   const [comprobante, setComprobante] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -138,12 +51,22 @@ export default function ReservaForm() {
   const elegidos = servicios.filter((s) => seleccion.includes(s.nombre));
   const totalPrecio = elegidos.reduce((a, s) => a + s.precio, 0);
   const totalMin = elegidos.reduce((a, s) => a + s.duracionMin, 0);
-  const anticipo = Math.round(totalPrecio / 2);
+
+  // Descuento de cumpleaños: si el mes de la cita es el mes de nacimiento.
+  const mesCumple = cliente.fecha_nacimiento
+    ? cliente.fecha_nacimiento.split("-")[1]
+    : "";
+  const mesCita = fecha ? fecha.split("-")[1] : "";
+  const esCumpleMes = !!mesCumple && mesCumple === mesCita;
+  const descuento = esCumpleMes
+    ? Math.round((totalPrecio * DESCUENTO_CUMPLE) / 100)
+    : 0;
+  const totalFinal = totalPrecio - descuento;
+  const anticipo = Math.round(totalFinal / 2);
 
   const { min, max } = useMemo(() => rangoFechas(), []);
   const abierto = fecha ? estaAbierto(fecha) : true;
 
-  // Consultamos al servidor las horas disponibles (excluye citas ya ocupadas).
   useEffect(() => {
     if (!fecha || totalMin <= 0 || !estaAbierto(fecha)) {
       setSlots([]);
@@ -184,11 +107,6 @@ export default function ReservaForm() {
 
   async function confirmar() {
     setError("");
-    if (!nombre.trim()) return setError("Escribe tu nombre.");
-    if (whatsapp.replace(/\D/g, "").length !== 10)
-      return setError("Escribe un WhatsApp válido de 10 dígitos.");
-    if (primeraVez && !nacimiento)
-      return setError("Escribe tu fecha de nacimiento.");
     if (!comprobante) return setError("Sube tu comprobante de transferencia.");
 
     setEnviando(true);
@@ -198,12 +116,13 @@ export default function ReservaForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombre: nombre.trim(),
-          whatsapp,
-          primera_vez: primeraVez,
-          fecha_nacimiento: primeraVez ? nacimiento : null,
+          cliente_id: cliente.id,
+          nombre: cliente.nombre,
+          whatsapp: cliente.telefono,
+          primera_vez: false,
+          fecha_nacimiento: cliente.fecha_nacimiento,
           servicios: elegidos.map((s) => s.nombre).join(" + "),
-          total: totalPrecio,
+          total: totalFinal,
           anticipo,
           fecha_cita: fecha,
           hora_cita: hora,
@@ -215,9 +134,7 @@ export default function ReservaForm() {
       if (!r.ok || !data.ok) throw new Error(data.error || "No se pudo guardar.");
       setEnviado(true);
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Hubo un problema. Intenta de nuevo.",
-      );
+      setError(e instanceof Error ? e.message : "Hubo un problema.");
     } finally {
       setEnviando(false);
     }
@@ -232,39 +149,27 @@ export default function ReservaForm() {
           ¡Reserva recibida!
         </h2>
         <p className="mt-2 text-muted">
-          Gracias, {nombre.split(" ")[0]}. Recibimos tu solicitud para el{" "}
+          Recibimos tu solicitud para el{" "}
           <strong>
             {nombreDia(fecha)} {fecha}
           </strong>{" "}
-          a las <strong>{hora}</strong>.
+          a las <strong>{hora}</strong>. Revisaremos tu comprobante y te
+          confirmaremos por WhatsApp. 💅
         </p>
-        <p className="mt-3 text-sm text-muted">
-          Revisaremos tu comprobante y te confirmaremos por WhatsApp. 💅
-        </p>
-        <div className="mt-4 rounded-xl border border-wine/30 bg-white p-4 text-sm">
-          <p className="text-ink">
-            💡 Para <strong>cancelar o reagendar</strong> tu cita, entra a{" "}
-            <a
-              href="/consultar"
-              className="font-semibold text-wine hover:underline"
-            >
-              Consultar mi cita
-            </a>{" "}
-            y búscala con tu nombre.
-          </p>
-        </div>
-        <p className="mt-4 rounded-xl border border-line bg-white p-4 text-xs text-muted">
-          {politicaCancelacion}
-        </p>
+        <Link
+          href="/reservar"
+          className="mt-6 inline-block rounded-full bg-wine px-6 py-3 font-semibold text-white hover:bg-wine-light"
+        >
+          Ver mis citas
+        </Link>
       </div>
     );
   }
 
-  // ===== PASO 2: datos y pago =====
+  // ===== PASO 2: anticipo =====
   if (paso === 2) {
     return (
-      <div className="space-y-6">
-        <Encabezado />
+      <div className="mt-8 space-y-6">
         <button
           type="button"
           onClick={() => setPaso(1)}
@@ -280,54 +185,17 @@ export default function ReservaForm() {
           <div className="mt-1 text-muted">
             📅 {nombreDia(fecha)} {fecha} · 🕒 {hora}
           </div>
+          {descuento > 0 && (
+            <div className="mt-2 text-sm text-green-700">
+              🎂 Descuento de cumpleaños ({DESCUENTO_CUMPLE}%): -${descuento}
+            </div>
+          )}
           <div className="mt-2 font-display text-lg font-bold text-wine">
             Anticipo: ${anticipo}{" "}
             <span className="text-sm font-normal text-muted">
-              (de ${totalPrecio} total)
+              (de ${totalFinal} total)
             </span>
           </div>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Nombre completo</label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
-            />
-            <p className="mt-1 text-xs text-muted">
-              Escríbelo completo — con tu nombre podrás consultar todas tus citas
-              (pasadas y próximas) más adelante.
-            </p>
-          </div>
-          <div>
-            <label className="text-sm font-medium">WhatsApp</label>
-            <input
-              type="tel"
-              inputMode="numeric"
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d\s-]/g, ""))}
-              placeholder="449 123 4567"
-              className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
-            />
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={primeraVez}
-              onChange={(e) => setPrimeraVez(e.target.checked)}
-              className="h-4 w-4 accent-wine"
-            />
-            Es mi primera vez en esma
-          </label>
-          {primeraVez && (
-            <div>
-              <label className="text-sm font-medium">Fecha de nacimiento</label>
-              <SelectorNacimiento onChange={setNacimiento} />
-            </div>
-          )}
         </div>
 
         <div>
@@ -393,9 +261,7 @@ export default function ReservaForm() {
 
   // ===== PASO 1: selección =====
   return (
-    <div className="space-y-8">
-      <Encabezado />
-      {/* Servicios */}
+    <div className="mt-8 space-y-8">
       <section>
         <h2 className="font-display text-xl font-bold text-wine">
           1. Elige tus servicios
@@ -469,7 +335,6 @@ export default function ReservaForm() {
         </div>
       </section>
 
-      {/* Día */}
       {elegidos.length > 0 && (
         <section>
           <h2 className="font-display text-xl font-bold text-wine">
@@ -491,15 +356,9 @@ export default function ReservaForm() {
               diasCerrados={[0]}
             />
           </div>
-          {fecha && !abierto && (
-            <p className="mt-2 text-sm text-danger">
-              El {nombreDia(fecha)} está cerrado. Por favor elige otro día.
-            </p>
-          )}
         </section>
       )}
 
-      {/* Hora */}
       {elegidos.length > 0 && fecha && abierto && (
         <section>
           <h2 className="font-display text-xl font-bold text-wine">
@@ -533,7 +392,6 @@ export default function ReservaForm() {
         </section>
       )}
 
-      {/* Resumen */}
       {elegidos.length > 0 && (
         <section className="rounded-2xl border border-line bg-beige/50 p-6">
           <h2 className="font-display text-lg font-bold text-ink">Resumen</h2>
@@ -554,6 +412,12 @@ export default function ReservaForm() {
               <span>Total</span>
               <span>${totalPrecio}</span>
             </div>
+            {descuento > 0 && (
+              <div className="flex justify-between text-green-700">
+                <span>🎂 Descuento de cumpleaños ({DESCUENTO_CUMPLE}%)</span>
+                <span>-${descuento}</span>
+              </div>
+            )}
             <div className="flex justify-between font-display text-lg font-bold text-wine">
               <span>Anticipo (50%)</span>
               <span>${anticipo}</span>

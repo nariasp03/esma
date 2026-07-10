@@ -7,8 +7,7 @@ import { useState } from "react";
 const links = [
   { href: "/", label: "Inicio" },
   { href: "/servicios", label: "Servicios" },
-  { href: "/reservar", label: "Reservar" },
-  { href: "/consultar", label: "Consultar mi cita" },
+  { href: "/reservar", label: "Mi cuenta" },
 ];
 
 export default function Navbar() {

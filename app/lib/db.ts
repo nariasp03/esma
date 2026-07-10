@@ -82,7 +82,103 @@ async function ensureTable() {
   await pool.query(
     `CREATE UNIQUE INDEX IF NOT EXISTS reservas_token_idx ON reservas(token);`,
   );
+  // Cuentas de clientas.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS clientes (
+      id SERIAL PRIMARY KEY,
+      creado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
+      nombre TEXT NOT NULL DEFAULT '',
+      telefono TEXT NOT NULL DEFAULT '',
+      fecha_nacimiento DATE
+    );
+  `);
+  await pool.query(
+    `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS cliente_id INTEGER;`,
+  );
   tablaLista = true;
+}
+
+export type Cliente = {
+  id: number;
+  nombre: string;
+  telefono: string;
+  fecha_nacimiento: string | null;
+};
+
+function soloDigitos(t: string): string {
+  return t.replace(/\D/g, "");
+}
+
+export async function buscarCliente(
+  nombre: string,
+  telefono: string,
+): Promise<Cliente | null> {
+  await ensureTable();
+  const r = await pool.query<Cliente>(
+    `SELECT id, nombre, telefono,
+            to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento
+     FROM clientes
+     WHERE lower(trim(nombre)) = lower(trim($1)) AND telefono = $2`,
+    [nombre, soloDigitos(telefono)],
+  );
+  return r.rows[0] ?? null;
+}
+
+export async function crearCliente(
+  nombre: string,
+  telefono: string,
+  fechaNacimiento: string | null,
+): Promise<Cliente> {
+  await ensureTable();
+  const tel = soloDigitos(telefono);
+  const existente = await buscarCliente(nombre, tel);
+  if (existente) {
+    if (fechaNacimiento) {
+      await pool.query(
+        "UPDATE clientes SET fecha_nacimiento = $1 WHERE id = $2",
+        [fechaNacimiento, existente.id],
+      );
+      existente.fecha_nacimiento = fechaNacimiento;
+    }
+    return existente;
+  }
+  const r = await pool.query<Cliente>(
+    `INSERT INTO clientes (nombre, telefono, fecha_nacimiento)
+     VALUES ($1,$2,$3)
+     RETURNING id, nombre, telefono,
+               to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento`,
+    [nombre.trim(), tel, fechaNacimiento],
+  );
+  return r.rows[0];
+}
+
+export async function getClientePorId(id: number): Promise<Cliente | null> {
+  await ensureTable();
+  const r = await pool.query<Cliente>(
+    `SELECT id, nombre, telefono,
+            to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento
+     FROM clientes WHERE id = $1`,
+    [id],
+  );
+  return r.rows[0] ?? null;
+}
+
+export async function reservasPorCliente(
+  clienteId: number,
+): Promise<Reserva[]> {
+  await ensureTable();
+  const r = await pool.query<Reserva>(
+    `SELECT id, creado_en, nombre, whatsapp, primera_vez,
+            to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
+            servicios, total, anticipo,
+            to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
+            hora_cita, duracion_min, NULL AS comprobante, metodo_pago, estado,
+            confirmada_clienta, token
+     FROM reservas WHERE cliente_id = $1
+     ORDER BY fecha_cita DESC, hora_cita DESC`,
+    [clienteId],
+  );
+  return r.rows;
 }
 
 export type NuevaReserva = {
@@ -98,6 +194,7 @@ export type NuevaReserva = {
   duracion_min: number;
   comprobante: string | null;
   metodo_pago: string;
+  cliente_id: number | null;
 };
 
 export async function insertarReserva(
@@ -108,8 +205,9 @@ export async function insertarReserva(
   const res = await pool.query(
     `INSERT INTO reservas
        (nombre, whatsapp, primera_vez, fecha_nacimiento, servicios, total,
-        anticipo, fecha_cita, hora_cita, duracion_min, comprobante, metodo_pago, token)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        anticipo, fecha_cita, hora_cita, duracion_min, comprobante, metodo_pago,
+        token, cliente_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
      RETURNING id`,
     [
       r.nombre,
@@ -125,6 +223,7 @@ export async function insertarReserva(
       r.comprobante,
       r.metodo_pago,
       token,
+      r.cliente_id,
     ],
   );
   return { id: res.rows[0].id as number, token };

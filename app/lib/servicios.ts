@@ -23,6 +23,10 @@ export const servicios: Servicio[] = [
 
 export const categorias = ["Manicure", "Acrílicas", "Retiros"] as const;
 
+// Descuento (%) que se aplica cuando la clienta reserva en el mes de su
+// cumpleaños. Cambiar aquí cuando se defina el porcentaje real.
+export const DESCUENTO_CUMPLE = 0;
+
 // Datos del negocio
 export const negocio = {
   nombre: "esma",
