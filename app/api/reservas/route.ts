@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       cliente_id: typeof b.cliente_id === "number" ? b.cliente_id : null,
     });
 
-    // Avisamos a la prima por WhatsApp (si CallMeBot está configurado).
+    // Avisamos al administrador por WhatsApp (si CallMeBot está configurado).
     await avisarNuevaReserva({
       nombre,
       whatsapp,

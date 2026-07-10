@@ -330,7 +330,7 @@ export async function listarReservas(): Promise<Reserva[]> {
   return r.rows;
 }
 
-// ----- Funciones para el panel de la administradora (la prima) -----
+// ----- Funciones para el panel de administración -----
 
 // Como el comprobante es una imagen grande (base64), NO lo mandamos en la
 // lista; solo indicamos si existe. Se pide aparte al abrirlo.
@@ -390,7 +390,7 @@ export async function actualizarEstadoReserva(
   return (r.rowCount ?? 0) > 0;
 }
 
-// La clienta de confianza paga el anticipo en efectivo: lo registra la prima.
+// La clienta de confianza paga el anticipo en efectivo: lo registra el admin.
 // Deja el método en "efectivo" y confirma la cita.
 export async function registrarEfectivo(id: number): Promise<boolean> {
   await ensureTable();

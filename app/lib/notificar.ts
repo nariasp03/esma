@@ -1,6 +1,6 @@
 import { nombreDia } from "@/app/lib/disponibilidad";
 
-// Aviso por WhatsApp a la prima cuando entra una reserva nueva, usando
+// Aviso por WhatsApp al administrador cuando entra una reserva nueva, usando
 // CallMeBot (gratis). Requiere dos variables de entorno:
 //   CALLMEBOT_PHONE  → número que autorizó el bot (con lada, ej. 5214491863483)
 //   CALLMEBOT_APIKEY → la API key que da CallMeBot al activarlo
