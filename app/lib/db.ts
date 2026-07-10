@@ -325,3 +325,88 @@ export async function listarReservas(): Promise<Reserva[]> {
   );
   return r.rows;
 }
+
+// ----- Funciones para el panel de la administradora (la prima) -----
+
+// Como el comprobante es una imagen grande (base64), NO lo mandamos en la
+// lista; solo indicamos si existe. Se pide aparte al abrirlo.
+export type ReservaAdmin = Omit<Reserva, "comprobante"> & {
+  tiene_comprobante: boolean;
+};
+
+export async function listarReservasAdmin(): Promise<ReservaAdmin[]> {
+  await ensureTable();
+  const r = await pool.query<ReservaAdmin>(
+    `SELECT id, creado_en, nombre, whatsapp, primera_vez,
+            to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
+            servicios, total, anticipo,
+            to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
+            hora_cita, duracion_min, metodo_pago, estado,
+            confirmada_clienta, token,
+            (comprobante IS NOT NULL AND comprobante <> '') AS tiene_comprobante
+     FROM reservas
+     ORDER BY fecha_cita DESC, hora_cita DESC`,
+  );
+  return r.rows;
+}
+
+export async function getComprobante(id: number): Promise<string | null> {
+  await ensureTable();
+  const r = await pool.query<{ comprobante: string | null }>(
+    "SELECT comprobante FROM reservas WHERE id = $1",
+    [id],
+  );
+  return r.rows[0]?.comprobante ?? null;
+}
+
+export async function getReservaPorId(id: number): Promise<Reserva | null> {
+  await ensureTable();
+  const r = await pool.query<Reserva>(
+    `SELECT id, creado_en, nombre, whatsapp, primera_vez,
+            to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
+            servicios, total, anticipo,
+            to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
+            hora_cita, duracion_min, comprobante, metodo_pago, estado,
+            confirmada_clienta, token
+     FROM reservas WHERE id = $1`,
+    [id],
+  );
+  return r.rows[0] ?? null;
+}
+
+export async function actualizarEstadoReserva(
+  id: number,
+  estado: string,
+): Promise<boolean> {
+  await ensureTable();
+  const r = await pool.query(
+    "UPDATE reservas SET estado = $1 WHERE id = $2 RETURNING id",
+    [estado, id],
+  );
+  return (r.rowCount ?? 0) > 0;
+}
+
+// La clienta de confianza paga el anticipo en efectivo: lo registra la prima.
+// Deja el método en "efectivo" y confirma la cita.
+export async function registrarEfectivo(id: number): Promise<boolean> {
+  await ensureTable();
+  const r = await pool.query(
+    "UPDATE reservas SET metodo_pago = 'efectivo', estado = 'Confirmada' WHERE id = $1 RETURNING id",
+    [id],
+  );
+  return (r.rowCount ?? 0) > 0;
+}
+
+export async function reagendarReservaPorId(
+  id: number,
+  fecha: string,
+  hora: string,
+): Promise<boolean> {
+  await ensureTable();
+  const r = await pool.query(
+    `UPDATE reservas SET fecha_cita = $1, hora_cita = $2
+     WHERE id = $3 AND estado <> 'Cancelada' RETURNING id`,
+    [fecha, hora, id],
+  );
+  return (r.rowCount ?? 0) > 0;
+}
