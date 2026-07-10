@@ -3,9 +3,9 @@ import { negocio } from "@/app/lib/servicios";
 
 export default function Home() {
   return (
-    <div>
+    <div className="bg-wine-dark">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-wine-dark to-wine text-white">
+      <section className="bg-wine-dark text-white">
         <div className="mx-auto max-w-3xl px-6 py-24 text-center sm:py-32">
           <p className="text-sm uppercase tracking-[0.3em] text-beige-dark">
             Estudio de uñas · {negocio.ciudad}
