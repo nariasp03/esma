@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Calendario from "@/app/reservar/Calendario";
 import { nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
-import { politicaCancelacion } from "@/app/lib/servicios";
 
 type Datos = {
   token: string;
@@ -166,28 +165,23 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
           Esta cita ya pasó. ¡Gracias por tu visita! 💖
         </p>
       ) : modo === "ver" ? (
-        <>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => setModo("reagendar")}
-              className="flex-1 rounded-full bg-wine px-6 py-3 font-semibold text-white transition-colors hover:bg-wine-light"
-            >
-              Reagendar cita
-            </button>
-            <button
-              type="button"
-              disabled={procesando}
-              onClick={cancelar}
-              className="flex-1 rounded-full border border-line px-6 py-3 font-semibold text-ink transition-colors hover:bg-beige disabled:opacity-60"
-            >
-              Cancelar cita
-            </button>
-          </div>
-          <p className="rounded-xl border border-line bg-white p-4 text-xs text-muted">
-            {politicaCancelacion}
-          </p>
-        </>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => setModo("reagendar")}
+            className="flex-1 rounded-full bg-wine px-6 py-3 font-semibold text-white transition-colors hover:bg-wine-light"
+          >
+            Reagendar cita
+          </button>
+          <button
+            type="button"
+            disabled={procesando}
+            onClick={cancelar}
+            className="flex-1 rounded-full border border-line px-6 py-3 font-semibold text-ink transition-colors hover:bg-beige disabled:opacity-60"
+          >
+            Cancelar cita
+          </button>
+        </div>
       ) : (
         <div className="space-y-4">
           <h2 className="font-display text-xl font-bold text-wine">

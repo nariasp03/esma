@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getReservaPorToken } from "@/app/lib/db";
+import { politicaCancelacion } from "@/app/lib/servicios";
 import GestionCita from "./GestionCita";
 
 export const metadata: Metadata = {
@@ -53,6 +54,9 @@ export default async function CitaPage({
           estado: reserva.estado,
         }}
       />
+      <p className="mt-8 rounded-xl border border-line bg-white p-4 text-xs text-muted">
+        {politicaCancelacion}
+      </p>
     </div>
   );
 }

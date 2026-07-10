@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import GestionCita from "@/app/cita/[token]/GestionCita";
 import { MESES } from "./Calendario";
+import { politicaCancelacion } from "@/app/lib/servicios";
 
 type CitaResumen = {
   token: string;
@@ -82,6 +83,10 @@ export default function PanelCliente({
           ))}
         </div>
       )}
+
+      <p className="mt-8 rounded-xl border border-line bg-white p-4 text-xs text-muted">
+        {politicaCancelacion}
+      </p>
     </div>
   );
 }
