@@ -166,7 +166,8 @@ export async function getReservaPorToken(
   return r.rows[0] ?? null;
 }
 
-// Busca las citas PRÓXIMAS y no canceladas de una clienta por su nombre completo.
+// Busca TODAS las citas de una clienta por su nombre completo (pasadas,
+// próximas y canceladas), más recientes primero.
 export async function reservasPorNombre(nombre: string): Promise<Reserva[]> {
   await ensureTable();
   const r = await pool.query<Reserva>(
@@ -178,9 +179,7 @@ export async function reservasPorNombre(nombre: string): Promise<Reserva[]> {
             confirmada_clienta, token
      FROM reservas
      WHERE lower(trim(nombre)) = lower(trim($1))
-       AND estado <> 'Cancelada'
-       AND fecha_cita >= CURRENT_DATE
-     ORDER BY fecha_cita, hora_cita`,
+     ORDER BY fecha_cita DESC, hora_cita DESC`,
     [nombre],
   );
   return r.rows;

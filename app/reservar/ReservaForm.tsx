@@ -279,13 +279,17 @@ export default function ReservaForm() {
 
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Nombre</label>
+            <label className="text-sm font-medium">Nombre completo</label>
             <input
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-wine"
             />
+            <p className="mt-1 text-xs text-muted">
+              Escríbelo completo — con tu nombre podrás consultar todas tus citas
+              (pasadas y próximas) más adelante.
+            </p>
           </div>
           <div>
             <label className="text-sm font-medium">WhatsApp</label>

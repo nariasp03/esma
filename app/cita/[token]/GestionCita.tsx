@@ -41,6 +41,10 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
 
   const { min, max } = useMemo(() => rangoFechas(), []);
 
+  const hoyD = new Date();
+  const hoyStr = `${hoyD.getFullYear()}-${String(hoyD.getMonth() + 1).padStart(2, "0")}-${String(hoyD.getDate()).padStart(2, "0")}`;
+  const esPasada = fecha < hoyStr;
+
   useEffect(() => {
     if (!nuevaFecha) {
       setSlots([]);
@@ -141,6 +145,10 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
         <p className="rounded-xl border border-line bg-white p-4 text-sm text-muted">
           Esta cita está cancelada. Si quieres agendar otra, con gusto te
           esperamos. 💖
+        </p>
+      ) : esPasada ? (
+        <p className="rounded-xl border border-line bg-white p-4 text-sm text-muted">
+          Esta cita ya pasó. ¡Gracias por tu visita! 💖
         </p>
       ) : modo === "ver" ? (
         <>

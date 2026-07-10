@@ -49,8 +49,8 @@ export default function ConsultarCita() {
         Consultar mi cita
       </h1>
       <p className="mt-3 text-muted">
-        Escribe tu nombre completo (tal como lo pusiste al reservar) para ver,
-        reagendar o cancelar tu cita.
+        Escribe tu nombre completo (tal como lo pusiste al reservar) para ver
+        todas tus citas —pasadas y próximas— y reagendar o cancelar las próximas.
       </p>
 
       <form onSubmit={buscar} className="mt-6 flex flex-col gap-3 sm:flex-row">
