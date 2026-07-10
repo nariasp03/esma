@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Calendario from "@/app/reservar/Calendario";
+import CalendarIcon from "@/app/components/CalendarIcon";
+import ClockIcon from "@/app/components/ClockIcon";
 import { nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
 
 type Datos = {
@@ -137,10 +139,16 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
             {estado}
           </span>
         </div>
-        <div className="mt-3 text-sm text-ink">
-          📅 <strong>{nombreDia(fecha)}</strong> {fecha}
+        <div className="mt-3 flex items-center gap-2 text-sm text-ink">
+          <CalendarIcon className="h-4 w-4 shrink-0 text-wine" />
+          <span>
+            <strong>{nombreDia(fecha)}</strong> {fecha}
+          </span>
         </div>
-        <div className="text-sm text-ink">🕒 {hora}</div>
+        <div className="mt-1 flex items-center gap-2 text-sm text-ink">
+          <ClockIcon className="h-4 w-4 shrink-0 text-wine" />
+          <span>{hora}</span>
+        </div>
         <div className="mt-2 text-sm text-muted">Anticipo: ${reserva.anticipo}</div>
       </div>
 
