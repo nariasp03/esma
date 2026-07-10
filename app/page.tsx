@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { servicios, negocio } from "@/app/lib/servicios";
-import InstagramIcon from "./components/InstagramIcon";
 
 export default function Home() {
   // Unos cuantos servicios para mostrar en el inicio.
@@ -78,37 +77,6 @@ export default function Home() {
           >
             Ver todos los servicios
           </Link>
-        </div>
-      </section>
-
-      {/* Info */}
-      <section className="border-t border-line bg-beige">
-        <div className="mx-auto grid max-w-6xl gap-8 px-6 py-14 sm:grid-cols-3">
-          <div>
-            <h3 className="font-display text-lg font-bold text-wine">📍 Ubicación</h3>
-            <p className="mt-2 text-sm text-ink">{negocio.direccion}</p>
-            <p className="text-sm text-ink">{negocio.ciudad}</p>
-          </div>
-          <div>
-            <h3 className="font-display text-lg font-bold text-wine">🗓️ Solo con cita</h3>
-            <p className="mt-2 text-sm text-ink">
-              Reserva en línea y aparta tu lugar con tu anticipo.
-            </p>
-          </div>
-          <div>
-            <h3 className="flex items-center gap-2 font-display text-lg font-bold text-wine">
-              <InstagramIcon className="h-5 w-5" /> Instagram
-            </h3>
-            <a
-              href={negocio.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-2 rounded-full border border-wine/30 px-4 py-2 text-sm font-medium text-wine transition-colors hover:bg-wine hover:text-white"
-            >
-              <InstagramIcon className="h-4 w-4" />
-              {negocio.instagramUser}
-            </a>
-          </div>
         </div>
       </section>
     </div>
