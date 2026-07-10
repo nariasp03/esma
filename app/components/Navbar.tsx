@@ -19,7 +19,7 @@ export default function Navbar() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link
           href="/"
-          className="font-display text-2xl font-bold tracking-tight text-wine"
+          className="font-display text-3xl font-bold tracking-tight text-wine sm:text-4xl"
         >
           esma
         </Link>
