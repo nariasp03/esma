@@ -41,8 +41,16 @@ export default function ServiciosPage() {
                     </div>
                     <div className="text-sm text-muted">⏱️ {s.duracion}</div>
                   </div>
-                  <div className="shrink-0 font-display text-xl font-bold text-wine">
-                    ${s.precio}
+                  <div className="flex shrink-0 items-center gap-4">
+                    <div className="font-display text-xl font-bold text-wine">
+                      ${s.precio}
+                    </div>
+                    <Link
+                      href="/reservar"
+                      className="rounded-full bg-wine px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-wine-light"
+                    >
+                      Reservar
+                    </Link>
                   </div>
                 </div>
               ))}
