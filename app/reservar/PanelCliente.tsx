@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import GestionCita from "@/app/cita/[token]/GestionCita";
 import { MESES } from "./Calendario";
 import { politicaCancelacion } from "@/app/lib/servicios";
+import PlusIcon from "@/app/components/PlusIcon";
 
 type CitaResumen = {
   token: string;
@@ -47,11 +48,11 @@ export default function PanelCliente({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            Hola, {nombre.split(" ")[0]} 💅
+            Hola, {nombre.split(" ")[0]}
           </h1>
           {fechaNacimiento && (
             <p className="mt-1 text-sm text-muted">
-              🎂 Tu cumpleaños: {cumpleTexto(fechaNacimiento)}
+              Tu cumpleaños: {cumpleTexto(fechaNacimiento)}
             </p>
           )}
         </div>
@@ -66,15 +67,16 @@ export default function PanelCliente({
 
       <Link
         href="/reservar/nueva"
-        className="mt-6 inline-block rounded-full bg-wine px-6 py-3 font-semibold text-white transition-colors hover:bg-wine-light"
+        className="mt-6 inline-flex items-center gap-2 rounded-full bg-wine px-6 py-3 font-semibold text-white transition-colors hover:bg-wine-light"
       >
-        ➕ Agendar nueva cita
+        <PlusIcon className="h-4 w-4" />
+        Agendar nueva cita
       </Link>
 
       <h2 className="mt-10 font-display text-xl font-bold text-ink">Mis citas</h2>
       {reservas.length === 0 ? (
         <p className="mt-4 rounded-2xl border border-line bg-beige/50 p-6 text-center text-muted">
-          Aún no tienes citas. ¡Agenda la primera! 💖
+          Aún no tienes citas. ¡Agenda la primera!
         </p>
       ) : (
         <div className="mt-4 space-y-10">

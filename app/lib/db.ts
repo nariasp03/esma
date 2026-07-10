@@ -28,7 +28,7 @@ if (process.env.NODE_ENV !== "production") globalForPg.pgPool = pool;
 
 export const ESTADOS = [
   "Pendiente",
-  "Confirmada",
+  "Aprobada",
   "Cancelada",
   "Completada",
 ] as const;
@@ -97,6 +97,10 @@ async function ensureTable() {
   );
   await pool.query(
     `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS cliente_id INTEGER;`,
+  );
+  // Renombramos el estado antiguo "Confirmada" a "Aprobada".
+  await pool.query(
+    `UPDATE reservas SET estado = 'Aprobada' WHERE estado = 'Confirmada';`,
   );
   tablaLista = true;
 }
@@ -391,7 +395,7 @@ export async function actualizarEstadoReserva(
 export async function registrarEfectivo(id: number): Promise<boolean> {
   await ensureTable();
   const r = await pool.query(
-    "UPDATE reservas SET metodo_pago = 'efectivo', estado = 'Confirmada' WHERE id = $1 RETURNING id",
+    "UPDATE reservas SET metodo_pago = 'efectivo', estado = 'Aprobada' WHERE id = $1 RETURNING id",
     [id],
   );
   return (r.rowCount ?? 0) > 0;

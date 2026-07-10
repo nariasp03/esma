@@ -11,6 +11,11 @@ import {
 } from "@/app/lib/servicios";
 import { estaAbierto, nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
 import Calendario from "./Calendario";
+import CalendarIcon from "@/app/components/CalendarIcon";
+import ClockIcon from "@/app/components/ClockIcon";
+import AlertIcon from "@/app/components/AlertIcon";
+import CheckIcon from "@/app/components/CheckIcon";
+import ChevronIcon from "@/app/components/ChevronIcon";
 
 type Cliente = {
   id: number;
@@ -157,7 +162,7 @@ export default function ReservaForm({
   if (enviado) {
     return (
       <div className="mt-8 rounded-2xl border border-line bg-beige/50 p-8 text-center">
-        <div className="text-5xl">💖</div>
+        <CheckIcon className="mx-auto h-14 w-14 text-wine" />
         <h2 className="mt-4 font-display text-2xl font-bold text-ink">
           ¡Reserva recibida!
         </h2>
@@ -167,7 +172,7 @@ export default function ReservaForm({
             {nombreDia(fecha)} {fecha}
           </strong>{" "}
           a las <strong>{hora}</strong>. Revisaremos tu comprobante y te
-          confirmaremos por WhatsApp. 💅
+          confirmaremos por WhatsApp.
         </p>
         <Link
           href="/reservar"
@@ -195,12 +200,19 @@ export default function ReservaForm({
           <div className="font-medium text-ink">
             {elegidos.map((s) => s.nombre).join(" + ")}
           </div>
-          <div className="mt-1 text-muted">
-            📅 {nombreDia(fecha)} {fecha} · 🕒 {hora}
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
+            <span className="flex items-center gap-1.5">
+              <CalendarIcon className="h-4 w-4 text-wine" />
+              {nombreDia(fecha)} {fecha}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ClockIcon className="h-4 w-4 text-wine" />
+              {hora}
+            </span>
           </div>
           {descuento > 0 && (
             <div className="mt-2 text-sm text-green-700">
-              🎂 Descuento de cumpleaños ({DESCUENTO_CUMPLE}%): -${descuento}
+              Descuento de cumpleaños ({DESCUENTO_CUMPLE}%): -${descuento}
             </div>
           )}
           <div className="mt-2 font-display text-lg font-bold text-wine">
@@ -230,6 +242,10 @@ export default function ReservaForm({
             <p>
               <span className="text-muted">Banco:</span> {pago.banco}
             </p>
+            <p>
+              <span className="text-muted">Concepto:</span>{" "}
+              <strong>{cliente.nombre} anticipo</strong>
+            </p>
             <label className="mt-3 block text-sm font-medium">
               Sube tu comprobante:
             </label>
@@ -255,8 +271,9 @@ export default function ReservaForm({
         </p>
 
         {error && (
-          <p className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
-            ⚠️ {error}
+          <p className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
+            <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
           </p>
         )}
 
@@ -305,7 +322,11 @@ export default function ReservaForm({
                       </span>
                     )}
                   </span>
-                  <span className="text-wine">{abierta ? "▲" : "▼"}</span>
+                  <ChevronIcon
+                    className={`h-4 w-4 shrink-0 text-wine transition-transform ${
+                      abierta ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
                 {abierta && (
                   <div className="space-y-2 border-t border-line p-3">
@@ -427,7 +448,7 @@ export default function ReservaForm({
             </div>
             {descuento > 0 && (
               <div className="flex justify-between text-green-700">
-                <span>🎂 Descuento de cumpleaños ({DESCUENTO_CUMPLE}%)</span>
+                <span>Descuento de cumpleaños ({DESCUENTO_CUMPLE}%)</span>
                 <span>-${descuento}</span>
               </div>
             )}
@@ -437,9 +458,16 @@ export default function ReservaForm({
             </div>
           </div>
           {fecha && abierto && hora && (
-            <p className="mt-3 text-sm text-ink">
-              📅 {nombreDia(fecha)} {fecha} · 🕒 {hora}
-            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink">
+              <span className="flex items-center gap-1.5">
+                <CalendarIcon className="h-4 w-4 text-wine" />
+                {nombreDia(fecha)} {fecha}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <ClockIcon className="h-4 w-4 text-wine" />
+                {hora}
+              </span>
+            </div>
           )}
 
           <button

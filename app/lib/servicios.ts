@@ -39,10 +39,10 @@ export const negocio = {
 // Datos para el anticipo (transferencia SPEI)
 export const pago = {
   clabe: "722969016430797626",
-  beneficiario: "Martha Esperanza Jimenez Perez",
+  beneficiario: "Martha Esperanza Jiménez Pérez",
   banco: "Mercado Pago",
 };
 
 // Texto de la política de cancelación (se muestra al reservar)
 export const politicaCancelacion =
-  "Política de cancelación: si cancelas tu cita con al menos 24 horas de anticipación, se te reembolsa tu anticipo. Si la cancelas con menos de 24 horas de anticipación, el anticipo no es reembolsable. Gracias por respetar mi tiempo y el de las demás clientas 💖";
+  "Política de cancelación: si cancelas tu cita con al menos 24 horas de anticipación, se te reembolsa tu anticipo. Si la cancelas con menos de 24 horas de anticipación, el anticipo no es reembolsable. Gracias por respetar mi tiempo y el de las demás clientas.";

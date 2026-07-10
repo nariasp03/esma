@@ -6,16 +6,18 @@ import type { ReservaAdmin } from "@/app/lib/db";
 import Calendario from "@/app/reservar/Calendario";
 import CalendarIcon from "@/app/components/CalendarIcon";
 import ClockIcon from "@/app/components/ClockIcon";
+import AlertIcon from "@/app/components/AlertIcon";
+import CloseIcon from "@/app/components/CloseIcon";
 import { nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
 
 const colorEstado: Record<string, string> = {
   Pendiente: "bg-amber-100 text-amber-800",
-  Confirmada: "bg-green-100 text-green-800",
+  Aprobada: "bg-green-100 text-green-800",
   Cancelada: "bg-red-100 text-red-700",
   Completada: "bg-blue-100 text-blue-700",
 };
 
-const FILTROS = ["Todas", "Pendiente", "Confirmada", "Completada", "Cancelada"] as const;
+const FILTROS = ["Solicitudes", "Aprobada", "Completada", "Cancelada", "Todas"] as const;
 type Filtro = (typeof FILTROS)[number];
 
 function hoyStr(): string {
@@ -37,7 +39,7 @@ export default function AdminPanel({
 }) {
   const router = useRouter();
   const [reservas, setReservas] = useState(reservasIniciales);
-  const [filtro, setFiltro] = useState<Filtro>("Todas");
+  const [filtro, setFiltro] = useState<Filtro>("Solicitudes");
   const [busqueda, setBusqueda] = useState("");
   const [comprobanteId, setComprobanteId] = useState<number | null>(null);
   const [reagendarId, setReagendarId] = useState<number | null>(null);
@@ -53,7 +55,11 @@ export default function AdminPanel({
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
     return reservas
-      .filter((r) => (filtro === "Todas" ? true : r.estado === filtro))
+      .filter((r) => {
+        if (filtro === "Todas") return true;
+        if (filtro === "Solicitudes") return r.estado === "Pendiente";
+        return r.estado === filtro;
+      })
       .filter((r) => (q ? r.nombre.toLowerCase().includes(q) : true))
       .sort((a, b) => {
         const aFut = a.fecha_cita >= hoy;
@@ -101,7 +107,12 @@ export default function AdminPanel({
       {/* Filtros */}
       <div className="mt-6 flex flex-wrap gap-2">
         {FILTROS.map((f) => {
-          const n = f === "Todas" ? reservas.length : conteos[f] ?? 0;
+          const n =
+            f === "Todas"
+              ? reservas.length
+              : f === "Solicitudes"
+                ? conteos["Pendiente"] ?? 0
+                : conteos[f] ?? 0;
           return (
             <button
               key={f}
@@ -254,8 +265,9 @@ function CitaCard({
       </div>
 
       {error && (
-        <p className="mt-3 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">
-          ⚠️ {error}
+        <p className="mt-3 flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">
+          <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </p>
       )}
 
@@ -274,17 +286,17 @@ function CitaCard({
           <>
             <button
               disabled={procesando}
-              onClick={() => accion({ accion: "confirmar" }, { estado: "Confirmada" })}
+              onClick={() => accion({ accion: "aprobar" }, { estado: "Aprobada" })}
               className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
             >
-              Confirmar anticipo
+              Aprobar
             </button>
             <button
               disabled={procesando}
               onClick={() =>
                 accion(
                   { accion: "efectivo" },
-                  { estado: "Confirmada", metodo_pago: "efectivo" },
+                  { estado: "Aprobada", metodo_pago: "efectivo" },
                 )
               }
               className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-beige disabled:opacity-50"
@@ -294,7 +306,7 @@ function CitaCard({
           </>
         )}
 
-        {r.estado === "Confirmada" && (
+        {r.estado === "Aprobada" && (
           <button
             disabled={procesando}
             onClick={() => accion({ accion: "completar" }, { estado: "Completada" })}
@@ -369,7 +381,7 @@ function ComprobanteModal({ id, onClose }: { id: number; onClose: () => void }) 
             className="grid h-8 w-8 place-items-center rounded-lg border border-line text-ink hover:bg-beige"
             aria-label="Cerrar"
           >
-            ✕
+            <CloseIcon className="h-4 w-4" />
           </button>
         </div>
         <div className="mt-4">
@@ -464,7 +476,7 @@ function ReagendarModal({
             className="grid h-8 w-8 place-items-center rounded-lg border border-line text-ink hover:bg-beige"
             aria-label="Cerrar"
           >
-            ✕
+            <CloseIcon className="h-4 w-4" />
           </button>
         </div>
 
@@ -509,8 +521,9 @@ function ReagendarModal({
           )}
 
           {error && (
-            <p className="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">
-              ⚠️ {error}
+            <p className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">
+              <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{error}</span>
             </p>
           )}
 

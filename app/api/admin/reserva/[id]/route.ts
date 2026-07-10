@@ -10,7 +10,7 @@ import {
 import { slotsDisponibles, estaAbierto } from "@/app/lib/disponibilidad";
 
 // PATCH /api/admin/reserva/[id]
-// Acciones: confirmar | rechazar | efectivo | completar | cancelar | reagendar
+// Acciones: aprobar | rechazar | efectivo | completar | cancelar | reagendar
 export async function PATCH(
   request: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -35,9 +35,9 @@ export async function PATCH(
   const body = await request.json().catch(() => ({}));
   const accion = body.accion;
 
-  if (accion === "confirmar") {
-    await actualizarEstadoReserva(id, "Confirmada");
-    return NextResponse.json({ ok: true, estado: "Confirmada" });
+  if (accion === "aprobar") {
+    await actualizarEstadoReserva(id, "Aprobada");
+    return NextResponse.json({ ok: true, estado: "Aprobada" });
   }
 
   if (accion === "rechazar") {
@@ -48,7 +48,7 @@ export async function PATCH(
 
   if (accion === "efectivo") {
     await registrarEfectivo(id);
-    return NextResponse.json({ ok: true, estado: "Confirmada", metodo_pago: "efectivo" });
+    return NextResponse.json({ ok: true, estado: "Aprobada", metodo_pago: "efectivo" });
   }
 
   if (accion === "completar") {

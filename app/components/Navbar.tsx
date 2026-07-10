@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import MenuIcon from "./MenuIcon";
+import CloseIcon from "./CloseIcon";
 
 const links = [
   { href: "/", label: "Inicio" },
@@ -49,9 +51,13 @@ export default function Navbar() {
         <button
           onClick={() => setOpen((v) => !v)}
           aria-label="Abrir menú"
-          className="grid h-10 w-10 place-items-center rounded-lg border border-line md:hidden"
+          className="grid h-10 w-10 place-items-center rounded-lg border border-line text-wine md:hidden"
         >
-          <span className="text-xl leading-none text-wine">{open ? "✕" : "☰"}</span>
+          {open ? (
+            <CloseIcon className="h-5 w-5" />
+          ) : (
+            <MenuIcon className="h-5 w-5" />
+          )}
         </button>
       </nav>
 

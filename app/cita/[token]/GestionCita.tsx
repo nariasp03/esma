@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Calendario from "@/app/reservar/Calendario";
 import CalendarIcon from "@/app/components/CalendarIcon";
 import ClockIcon from "@/app/components/ClockIcon";
+import AlertIcon from "@/app/components/AlertIcon";
 import { nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
 
 type Datos = {
@@ -20,7 +21,7 @@ type Datos = {
 
 const colorEstado: Record<string, string> = {
   Pendiente: "bg-amber-100 text-amber-800",
-  Confirmada: "bg-green-100 text-green-800",
+  Aprobada: "bg-green-100 text-green-800",
   Cancelada: "bg-red-100 text-red-700",
   Completada: "bg-blue-100 text-blue-700",
 };
@@ -100,7 +101,7 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
       const horasFaltan = (cita.getTime() - Date.now()) / (1000 * 60 * 60);
       if (horasFaltan >= 24) {
         setMensaje(
-          "Tu cita fue cancelada. Como la cancelaste con más de 24 horas de anticipación, se te reembolsará tu anticipo. 💖",
+          "Tu cita fue cancelada. Como la cancelaste con más de 24 horas de anticipación, se te reembolsará tu anticipo.",
         );
       } else {
         setMensaje(
@@ -121,7 +122,7 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
       setModo("ver");
       setNuevaFecha("");
       setNuevaHora("");
-      setMensaje("¡Tu cita fue reagendada! 💖");
+      setMensaje("¡Tu cita fue reagendada!");
     }
   }
 
@@ -158,19 +159,20 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
         </p>
       )}
       {error && (
-        <p className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
-          ⚠️ {error}
+        <p className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
+          <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </p>
       )}
 
       {estado === "Cancelada" ? (
         <p className="rounded-xl border border-line bg-white p-4 text-sm text-muted">
           Esta cita está cancelada. Si quieres agendar otra, con gusto te
-          esperamos. 💖
+          esperamos.
         </p>
       ) : esPasada ? (
         <p className="rounded-xl border border-line bg-white p-4 text-sm text-muted">
-          Esta cita ya pasó. ¡Gracias por tu visita! 💖
+          Esta cita ya pasó. ¡Gracias por tu visita!
         </p>
       ) : modo === "ver" ? (
         <div className="flex flex-col gap-3 sm:flex-row">

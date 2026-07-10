@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AlertIcon from "@/app/components/AlertIcon";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -50,8 +51,9 @@ export default function AdminLogin() {
         </div>
 
         {error && (
-          <p className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
-            ⚠️ {error}
+          <p className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
+            <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
           </p>
         )}
 

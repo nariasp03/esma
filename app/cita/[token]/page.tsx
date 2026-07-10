@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getReservaPorToken } from "@/app/lib/db";
 import { politicaCancelacion } from "@/app/lib/servicios";
 import GestionCita from "./GestionCita";
+import SearchIcon from "@/app/components/SearchIcon";
 
 export const metadata: Metadata = {
   title: "Tu cita · esma",
@@ -22,7 +23,7 @@ export default async function CitaPage({
   if (!reserva) {
     return (
       <div className="mx-auto max-w-lg px-6 py-16 text-center">
-        <div className="text-4xl">🔎</div>
+        <SearchIcon className="mx-auto h-12 w-12 text-wine" />
         <h1 className="mt-4 font-display text-2xl font-bold text-ink">
           No encontramos esta cita
         </h1>
