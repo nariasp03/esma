@@ -18,7 +18,7 @@ export default function Footer() {
           </h3>
           <p className="mt-3 text-sm text-white/80">{negocio.direccion}</p>
           <p className="text-sm text-white/80">{negocio.ciudad}</p>
-          <p className="mt-2 text-sm text-white/70">Solo con cita en el local.</p>
+          <p className="mt-2 text-sm text-white/70">Sólo con cita en el local.</p>
         </div>
 
         <div>

@@ -24,6 +24,20 @@ function archivoABase64(file: File): Promise<string> {
   });
 }
 
+function Encabezado() {
+  return (
+    <div>
+      <h1 className="font-display text-4xl font-bold tracking-tight text-ink sm:text-5xl">
+        Reserva tu cita
+      </h1>
+      <p className="mt-4 text-muted">
+        Elige tus servicios, el día y la hora. Apartas tu lugar con el 50% de
+        anticipo.
+      </p>
+    </div>
+  );
+}
+
 export default function ReservaForm() {
   // Paso 1: selección
   const [seleccion, setSeleccion] = useState<string[]>([]);
@@ -160,7 +174,8 @@ export default function ReservaForm() {
   // ===== PASO 2: datos y pago =====
   if (paso === 2) {
     return (
-      <div className="mt-8 space-y-6">
+      <div className="space-y-6">
+        <Encabezado />
         <button
           type="button"
           onClick={() => setPaso(1)}
@@ -286,7 +301,8 @@ export default function ReservaForm() {
 
   // ===== PASO 1: selección =====
   return (
-    <div className="mt-8 space-y-8">
+    <div className="space-y-8">
+      <Encabezado />
       {/* Servicios */}
       <section>
         <h2 className="font-display text-xl font-bold text-wine">
