@@ -1,10 +1,31 @@
 import { nombreDia } from "@/app/lib/disponibilidad";
 
-// Aviso por WhatsApp al administrador cuando entra una reserva nueva, usando
-// CallMeBot (gratis). Requiere dos variables de entorno:
+// Avisos por WhatsApp al administrador usando CallMeBot (gratis). Requiere:
 //   CALLMEBOT_PHONE  → número que autorizó el bot (con lada, ej. 5214491863483)
 //   CALLMEBOT_APIKEY → la API key que da CallMeBot al activarlo
-// Si no están configuradas, simplemente no hace nada (no rompe la reserva).
+// Si no están configuradas, simplemente no hace nada (no rompe la operación).
+
+// Envía un mensaje de WhatsApp. Nunca lanza error (los avisos no deben tumbar
+// la reserva/reagenda). Corta a los 8s si CallMeBot tarda.
+async function enviarWhatsApp(texto: string): Promise<void> {
+  const phone = (process.env.CALLMEBOT_PHONE || "").replace(/\D/g, "");
+  const apikey = process.env.CALLMEBOT_APIKEY;
+  if (!phone || !apikey) return; // sin configurar: no se envía nada
+
+  const url =
+    `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}` +
+    `&text=${encodeURIComponent(texto)}&apikey=${encodeURIComponent(apikey)}`;
+
+  const controlador = new AbortController();
+  const t = setTimeout(() => controlador.abort(), 8000);
+  try {
+    await fetch(url, { signal: controlador.signal });
+  } catch {
+    // Ignoramos fallos del aviso.
+  } finally {
+    clearTimeout(t);
+  }
+}
 
 type DatosAviso = {
   nombre: string;
@@ -15,11 +36,8 @@ type DatosAviso = {
   anticipo: number;
 };
 
+// Aviso de una reserva nueva.
 export async function avisarNuevaReserva(d: DatosAviso): Promise<void> {
-  const phone = (process.env.CALLMEBOT_PHONE || "").replace(/\D/g, "");
-  const apikey = process.env.CALLMEBOT_APIKEY;
-  if (!phone || !apikey) return; // sin configurar: no se envía nada
-
   const texto =
     `💅 Nueva reserva en esma\n` +
     `Cliente: ${d.nombre}\n` +
@@ -29,20 +47,25 @@ export async function avisarNuevaReserva(d: DatosAviso): Promise<void> {
     `Hora: ${d.hora_cita}\n` +
     `Anticipo: $${d.anticipo}\n` +
     `Revisa el panel para confirmar el pago.`;
+  await enviarWhatsApp(texto);
+}
 
-  const url =
-    `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}` +
-    `&text=${encodeURIComponent(texto)}&apikey=${encodeURIComponent(apikey)}`;
+type DatosReagenda = {
+  nombre: string;
+  servicios: string;
+  fechaAnterior: string;
+  horaAnterior: string;
+  fechaNueva: string;
+  horaNueva: string;
+};
 
-  // Cortamos a los 8 segundos para no dejar colgada la petición si CallMeBot
-  // tarda; cualquier error se ignora (el aviso no debe tumbar la reserva).
-  const controlador = new AbortController();
-  const t = setTimeout(() => controlador.abort(), 8000);
-  try {
-    await fetch(url, { signal: controlador.signal });
-  } catch {
-    // Ignoramos fallos del aviso.
-  } finally {
-    clearTimeout(t);
-  }
+// Aviso de que una clienta reagendó su cita.
+export async function avisarReagenda(d: DatosReagenda): Promise<void> {
+  const texto =
+    `📅 Reagenda en esma\n` +
+    `La clienta ${d.nombre} cambió la fecha de su cita.\n` +
+    `Servicio(s): ${d.servicios}\n` +
+    `Antes: ${nombreDia(d.fechaAnterior)} ${d.fechaAnterior} ${d.horaAnterior}\n` +
+    `Ahora: ${nombreDia(d.fechaNueva)} ${d.fechaNueva} ${d.horaNueva}`;
+  await enviarWhatsApp(texto);
 }

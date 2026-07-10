@@ -6,6 +6,7 @@ import {
   ocupadosDelDia,
 } from "@/app/lib/db";
 import { slotsDisponibles, estaAbierto } from "@/app/lib/disponibilidad";
+import { avisarReagenda } from "@/app/lib/notificar";
 
 // PATCH /api/cita/[token] — { accion: "cancelar" } o { accion: "reagendar", fecha, hora }
 export async function PATCH(
@@ -56,6 +57,16 @@ export async function PATCH(
       );
     }
     await reagendarReserva(token, fecha, hora);
+    // Avisamos al administrador por WhatsApp (si CallMeBot está configurado).
+    // La clienta no ve nada de esto.
+    await avisarReagenda({
+      nombre: reserva.nombre,
+      servicios: reserva.servicios,
+      fechaAnterior: reserva.fecha_cita,
+      horaAnterior: reserva.hora_cita,
+      fechaNueva: fecha,
+      horaNueva: hora,
+    });
     return NextResponse.json({ ok: true });
   }
 
