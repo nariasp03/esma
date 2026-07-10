@@ -1,10 +1,12 @@
 import { nombreDia } from "@/app/lib/disponibilidad";
 
 // Aviso por WhatsApp a la prima cuando entra una reserva nueva, usando
-// CallMeBot (gratis). Requiere dos variables de entorno:
-//   CALLMEBOT_PHONE  → número que autorizó el bot (con lada, ej. 5214491863483)
-//   CALLMEBOT_APIKEY → la API key que da CallMeBot al activarlo
-// Si no están configuradas, simplemente no hace nada (no rompe la reserva).
+// Green API (https://green-api.com). Requiere estas variables de entorno:
+//   GREENAPI_ID_INSTANCE → idInstance de tu instancia
+//   GREENAPI_TOKEN       → apiTokenInstance de tu instancia
+//   GREENAPI_DESTINO     → número que RECIBE el aviso, con lada (ej. 5214491863483)
+//   GREENAPI_API_URL     → (opcional) host que da la consola; por defecto api.green-api.com
+// Si faltan las claves, no se envía nada (la reserva se guarda igual).
 
 type DatosAviso = {
   nombre: string;
@@ -16,9 +18,11 @@ type DatosAviso = {
 };
 
 export async function avisarNuevaReserva(d: DatosAviso): Promise<void> {
-  const phone = process.env.CALLMEBOT_PHONE;
-  const apikey = process.env.CALLMEBOT_APIKEY;
-  if (!phone || !apikey) return; // sin configurar: no se envía nada
+  const apiUrl = process.env.GREENAPI_API_URL || "https://api.green-api.com";
+  const idInstance = process.env.GREENAPI_ID_INSTANCE;
+  const token = process.env.GREENAPI_TOKEN;
+  const destino = (process.env.GREENAPI_DESTINO || "").replace(/\D/g, "");
+  if (!idInstance || !token || !destino) return; // sin configurar: no se envía
 
   const texto =
     `💅 Nueva reserva en esma\n` +
@@ -30,16 +34,19 @@ export async function avisarNuevaReserva(d: DatosAviso): Promise<void> {
     `Anticipo: $${d.anticipo}\n` +
     `Revisa el panel para confirmar el pago.`;
 
-  const url =
-    `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(phone)}` +
-    `&text=${encodeURIComponent(texto)}&apikey=${encodeURIComponent(apikey)}`;
+  const url = `${apiUrl}/waInstance${idInstance}/sendMessage/${token}`;
 
-  // Cortamos a los 8 segundos para no dejar colgada la petición si CallMeBot
-  // tarda; cualquier error se ignora (el aviso no debe tumbar la reserva).
+  // Cortamos a los 8 segundos para no dejar colgada la petición; cualquier
+  // error se ignora (el aviso no debe tumbar la reserva).
   const controlador = new AbortController();
   const t = setTimeout(() => controlador.abort(), 8000);
   try {
-    await fetch(url, { signal: controlador.signal });
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chatId: `${destino}@c.us`, message: texto }),
+      signal: controlador.signal,
+    });
   } catch {
     // Ignoramos fallos del aviso.
   } finally {
