@@ -25,6 +25,13 @@ function archivoABase64(file: File): Promise<string> {
   });
 }
 
+// Días que tiene un mes (considera años bisiestos para febrero).
+function diasDelMes(mes: string, anio: string): number {
+  if (!mes) return 31;
+  const y = anio ? Number(anio) : 2024; // bisiesto por defecto para permitir 29 feb
+  return new Date(y, Number(mes), 0).getDate();
+}
+
 // Selector de fecha de nacimiento con menús (día / mes / año).
 function SelectorNacimiento({ onChange }: { onChange: (v: string) => void }) {
   const [dia, setDia] = useState("");
@@ -34,7 +41,11 @@ function SelectorNacimiento({ onChange }: { onChange: (v: string) => void }) {
   const anios: number[] = [];
   for (let a = anioActual; a >= 1940; a--) anios.push(a);
 
+  const maxDia = diasDelMes(mes, anio);
+
   function actualizar(nd: string, nm: string, na: string) {
+    // Si el día ya no existe en ese mes/año (ej. 31 de febrero), lo limpiamos.
+    if (nd && Number(nd) > diasDelMes(nm, na)) nd = "";
     setDia(nd);
     setMes(nm);
     setAnio(na);
@@ -52,13 +63,13 @@ function SelectorNacimiento({ onChange }: { onChange: (v: string) => void }) {
         className={cls}
       >
         <option value="">Día</option>
-        {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map(
-          (d) => (
-            <option key={d} value={d}>
-              {Number(d)}
-            </option>
-          ),
-        )}
+        {Array.from({ length: maxDia }, (_, i) =>
+          String(i + 1).padStart(2, "0"),
+        ).map((d) => (
+          <option key={d} value={d}>
+            {Number(d)}
+          </option>
+        ))}
       </select>
       <select
         aria-label="Mes"
@@ -362,7 +373,11 @@ export default function ReservaForm() {
           {politicaCancelacion}
         </p>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && (
+          <p className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
+            ⚠️ {error}
+          </p>
+        )}
 
         <button
           type="button"

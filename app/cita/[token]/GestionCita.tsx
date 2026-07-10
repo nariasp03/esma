@@ -94,7 +94,18 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
     if (!confirm("¿Segura que quieres cancelar tu cita?")) return;
     if (await accion({ accion: "cancelar" })) {
       setEstado("Cancelada");
-      setMensaje("Tu cita fue cancelada.");
+      // ¿Se canceló con al menos 24 horas de anticipación?
+      const cita = new Date(`${fecha}T${hora}:00`);
+      const horasFaltan = (cita.getTime() - Date.now()) / (1000 * 60 * 60);
+      if (horasFaltan >= 24) {
+        setMensaje(
+          "Tu cita fue cancelada. Como la cancelaste con más de 24 horas de anticipación, se te reembolsará tu anticipo. 💖",
+        );
+      } else {
+        setMensaje(
+          "Tu cita fue cancelada. Como fue con menos de 24 horas de anticipación, el anticipo no es reembolsable.",
+        );
+      }
     }
   }
 
@@ -139,7 +150,11 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
           {mensaje}
         </p>
       )}
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && (
+        <p className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
+          ⚠️ {error}
+        </p>
+      )}
 
       {estado === "Cancelada" ? (
         <p className="rounded-xl border border-line bg-white p-4 text-sm text-muted">
