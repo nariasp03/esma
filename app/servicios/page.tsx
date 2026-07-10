@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { servicios, categorias } from "@/app/lib/servicios";
+import ClockIcon from "@/app/components/ClockIcon";
 
 export const metadata: Metadata = {
   title: "Servicios y precios · esma",
@@ -56,7 +57,10 @@ export default function ServiciosPage() {
                         <span className="ml-2 text-xs text-muted">({s.nota})</span>
                       ) : null}
                     </div>
-                    <div className="text-sm text-muted">⏱️ {s.duracion}</div>
+                    <div className="flex items-center gap-1.5 text-sm text-muted">
+                      <ClockIcon className="h-4 w-4 shrink-0 text-wine" />
+                      {s.duracion}
+                    </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-4">
                     <div className="font-display text-xl font-bold text-wine">
