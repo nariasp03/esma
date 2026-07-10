@@ -27,7 +27,7 @@ export default function Footer() {
             rel="noopener noreferrer"
             className="mt-2 inline-block text-sm font-medium text-beige-dark hover:text-white hover:underline"
           >
-            📍 Ver en el mapa →
+            Ver en el mapa →
           </a>
           <p className="mt-2 text-sm text-white/70">Sólo con cita en el local.</p>
         </div>
