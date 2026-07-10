@@ -22,9 +22,26 @@ export default function ServiciosPage() {
       {categorias.map((cat) => {
         const items = servicios.filter((s) => s.categoria === cat);
         return (
-          <section key={cat} className="mt-12">
-            <h2 className="font-display text-2xl font-bold text-wine">{cat}</h2>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-line">
+          <details
+            key={cat}
+            className="group mt-6 overflow-hidden rounded-2xl border border-line"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 bg-beige/60 px-5 py-4 font-display text-2xl font-bold text-wine transition-colors hover:bg-beige [&::-webkit-details-marker]:hidden">
+              {cat}
+              <svg
+                className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </summary>
+            <div className="border-t border-line">
               {items.map((s, i) => (
                 <div
                   key={s.nombre}
@@ -55,7 +72,7 @@ export default function ServiciosPage() {
                 </div>
               ))}
             </div>
-          </section>
+          </details>
         );
       })}
 
