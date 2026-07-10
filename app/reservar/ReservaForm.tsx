@@ -27,6 +27,7 @@ function archivoABase64(file: File): Promise<string> {
 export default function ReservaForm() {
   // Paso 1: selección
   const [seleccion, setSeleccion] = useState<string[]>([]);
+  const [abiertas, setAbiertas] = useState<string[]>([]); // categorías desplegadas
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [slots, setSlots] = useState<string[]>([]);
@@ -79,6 +80,12 @@ export default function ReservaForm() {
     setHora("");
     setSeleccion((prev) =>
       prev.includes(nombre) ? prev.filter((n) => n !== nombre) : [...prev, nombre],
+    );
+  }
+
+  function toggleCategoria(cat: string) {
+    setAbiertas((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
     );
   }
 
@@ -288,49 +295,69 @@ export default function ReservaForm() {
         <p className="mt-1 text-sm text-muted">
           Puedes elegir varios (por ejemplo, retiro + gelish).
         </p>
-        <div className="mt-4 space-y-5">
-          {categorias.map((cat) => (
-            <div key={cat}>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
-                {cat}
-              </h3>
-              <div className="mt-2 space-y-2">
-                {servicios
-                  .filter((s) => s.categoria === cat)
-                  .map((s) => {
-                    const activo = seleccion.includes(s.nombre);
-                    return (
-                      <label
-                        key={s.nombre}
-                        className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors ${
-                          activo
-                            ? "border-wine bg-beige/60"
-                            : "border-line bg-white hover:border-wine/40"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={activo}
-                            onChange={() => toggleServicio(s.nombre)}
-                            className="h-4 w-4 accent-wine"
-                          />
-                          <div>
-                            <div className="text-sm font-medium text-ink">
-                              {s.nombre}
+        <div className="mt-4 space-y-3">
+          {categorias.map((cat) => {
+            const abierta = abiertas.includes(cat);
+            const items = servicios.filter((s) => s.categoria === cat);
+            const nSel = items.filter((s) => seleccion.includes(s.nombre)).length;
+            return (
+              <div
+                key={cat}
+                className="overflow-hidden rounded-xl border border-line"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleCategoria(cat)}
+                  className="flex w-full items-center justify-between gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-beige/40"
+                >
+                  <span className="font-display font-bold text-ink">
+                    {cat}
+                    {nSel > 0 && (
+                      <span className="ml-2 text-xs font-medium text-wine">
+                        ({nSel} elegido{nSel > 1 ? "s" : ""})
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-wine">{abierta ? "▾" : "▸"}</span>
+                </button>
+                {abierta && (
+                  <div className="space-y-2 border-t border-line p-3">
+                    {items.map((s) => {
+                      const activo = seleccion.includes(s.nombre);
+                      return (
+                        <label
+                          key={s.nombre}
+                          className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors ${
+                            activo
+                              ? "border-wine bg-beige/60"
+                              : "border-line bg-white hover:border-wine/40"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={activo}
+                              onChange={() => toggleServicio(s.nombre)}
+                              className="h-4 w-4 accent-wine"
+                            />
+                            <div>
+                              <div className="text-sm font-medium text-ink">
+                                {s.nombre}
+                              </div>
+                              <div className="text-xs text-muted">{s.duracion}</div>
                             </div>
-                            <div className="text-xs text-muted">{s.duracion}</div>
                           </div>
-                        </div>
-                        <div className="font-display font-bold text-wine">
-                          ${s.precio}
-                        </div>
-                      </label>
-                    );
-                  })}
+                          <div className="font-display font-bold text-wine">
+                            ${s.precio}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
