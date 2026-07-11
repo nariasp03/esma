@@ -59,6 +59,13 @@ export default function AdminPanel({
     return c;
   }, [reservas]);
 
+  function contar(f: Filtro): number {
+    if (f === "Todas") return reservas.length;
+    if (f === "Solicitudes") return conteos["Pendiente"] ?? 0;
+    if (f === "Reagendadas") return reservas.filter((r) => r.reagendada).length;
+    return conteos[f] ?? 0;
+  }
+
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
     return reservas
@@ -112,31 +119,35 @@ export default function AdminPanel({
         </button>
       </div>
 
-      {/* Filtros */}
-      <div className="mt-6 flex flex-wrap gap-2">
-        {FILTROS.map((f) => {
-          const n =
-            f === "Todas"
-              ? reservas.length
-              : f === "Solicitudes"
-                ? conteos["Pendiente"] ?? 0
-                : f === "Reagendadas"
-                  ? reservas.filter((r) => r.reagendada).length
-                  : conteos[f] ?? 0;
-          return (
-            <button
-              key={f}
-              onClick={() => setFiltro(f)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                filtro === f
-                  ? "bg-wine text-white"
-                  : "border border-line bg-white text-ink hover:bg-beige"
-              }`}
-            >
-              {f} <span className="opacity-70">({n})</span>
-            </button>
-          );
-        })}
+      {/* Filtros: menú desplegable en celular, botones en pantalla grande */}
+      <div className="mt-6 sm:hidden">
+        <select
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value as Filtro)}
+          className="w-full rounded-xl border border-line bg-white px-4 py-3 text-ink outline-none focus:border-wine"
+        >
+          {FILTROS.map((f) => (
+            <option key={f} value={f}>
+              {f} ({contar(f)})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mt-6 hidden flex-wrap gap-2 sm:flex">
+        {FILTROS.map((f) => (
+          <button
+            key={f}
+            onClick={() => setFiltro(f)}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              filtro === f
+                ? "bg-wine text-white"
+                : "border border-line bg-white text-ink hover:bg-beige"
+            }`}
+          >
+            {f} <span className="opacity-70">({contar(f)})</span>
+          </button>
+        ))}
       </div>
 
       {/* Búsqueda */}
