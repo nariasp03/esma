@@ -176,8 +176,8 @@ export default function ReservaForm({
           <strong>
             {nombreDia(fecha)} {formatearFecha(fecha)}
           </strong>{" "}
-          a las <strong>{hora}</strong>. Revisaremos tu comprobante y te
-          confirmaremos por WhatsApp.
+          a las <strong>{hora}</strong>. Cuando aprobemos tu comprobante, tu
+          cita pasará a <strong>Aprobada</strong>.
         </p>
         <Link
           href="/reservar"
@@ -221,16 +221,19 @@ export default function ReservaForm({
             </div>
           )}
           <div className="mt-2 font-display text-lg font-bold text-wine">
-            Anticipo: ${anticipo}{" "}
+            Anticipo: <span className="font-sans">$</span>
+            {anticipo}{" "}
             <span className="text-sm font-normal text-muted">
-              (de ${totalFinal} total)
+              (de <span className="font-sans">$</span>
+              {totalFinal} total)
             </span>
           </div>
         </div>
 
         <div>
           <h3 className="font-display text-lg font-bold text-wine">
-            Tu anticipo: ${anticipo}
+            Tu anticipo: <span className="font-sans">$</span>
+            {anticipo}
           </h3>
           <p className="mt-1 text-sm text-muted">
             Aparta tu lugar con el 50% por transferencia.
@@ -459,7 +462,10 @@ export default function ReservaForm({
             )}
             <div className="flex justify-between font-display text-lg font-bold text-wine">
               <span>Anticipo (50%)</span>
-              <span>${anticipo}</span>
+              <span>
+                <span className="font-sans">$</span>
+                {anticipo}
+              </span>
             </div>
           </div>
           {fecha && abierto && hora && (
