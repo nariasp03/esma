@@ -8,7 +8,7 @@ import CalendarIcon from "@/app/components/CalendarIcon";
 import ClockIcon from "@/app/components/ClockIcon";
 import AlertIcon from "@/app/components/AlertIcon";
 import CloseIcon from "@/app/components/CloseIcon";
-import { nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
+import { nombreDia, rangoFechas, formatearFecha } from "@/app/lib/disponibilidad";
 
 const colorEstado: Record<string, string> = {
   Pendiente: "bg-amber-100 text-amber-800",
@@ -266,7 +266,7 @@ function CitaCard({
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink">
         <span className="flex items-center gap-1.5">
           <CalendarIcon className="h-4 w-4 text-wine" />
-          <strong>{nombreDia(r.fecha_cita)}</strong> {r.fecha_cita}
+          <strong>{nombreDia(r.fecha_cita)}</strong> {formatearFecha(r.fecha_cita)}
         </span>
         <span className="flex items-center gap-1.5">
           <ClockIcon className="h-4 w-4 text-wine" />

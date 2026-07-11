@@ -1,4 +1,4 @@
-import { nombreDia } from "@/app/lib/disponibilidad";
+import { nombreDia, formatearFecha } from "@/app/lib/disponibilidad";
 
 // Avisos por WhatsApp al administrador usando CallMeBot (gratis). Requiere:
 //   CALLMEBOT_PHONE  → número que autorizó el bot (con lada, ej. 5214491863483)
@@ -43,7 +43,7 @@ export async function avisarNuevaReserva(d: DatosAviso): Promise<void> {
     `Cliente: ${d.nombre}\n` +
     `WhatsApp: ${d.whatsapp}\n` +
     `Servicio(s): ${d.servicios}\n` +
-    `Día: ${nombreDia(d.fecha_cita)} ${d.fecha_cita}\n` +
+    `Día: ${nombreDia(d.fecha_cita)} ${formatearFecha(d.fecha_cita)}\n` +
     `Hora: ${d.hora_cita}\n` +
     `Anticipo: $${d.anticipo}\n` +
     `Revisa el panel para confirmar el pago.`;
@@ -65,7 +65,7 @@ export async function avisarReagenda(d: DatosReagenda): Promise<void> {
     `📅 Reagenda en esma\n` +
     `La clienta ${d.nombre} cambió la fecha de su cita.\n` +
     `Servicio(s): ${d.servicios}\n` +
-    `Antes: ${nombreDia(d.fechaAnterior)} ${d.fechaAnterior} ${d.horaAnterior}\n` +
-    `Ahora: ${nombreDia(d.fechaNueva)} ${d.fechaNueva} ${d.horaNueva}`;
+    `Antes: ${nombreDia(d.fechaAnterior)} ${formatearFecha(d.fechaAnterior)} ${d.horaAnterior}\n` +
+    `Ahora: ${nombreDia(d.fechaNueva)} ${formatearFecha(d.fechaNueva)} ${d.horaNueva}`;
   await enviarWhatsApp(texto);
 }

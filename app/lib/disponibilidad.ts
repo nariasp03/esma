@@ -12,7 +12,8 @@ export const HORARIOS: Record<number, { inicio: string; fin: string } | null> = 
 };
 
 export const BUFFER_MIN = 15; // descanso entre citas
-export const MIN_DIAS = 1; // se puede reservar desde 24 horas antes
+export const MIN_DIAS = 1; // se puede reservar para el día siguiente
+export const CORTE_HORA = 18; // hasta las 6pm se agenda para mañana; después, pasado mañana
 export const MAX_DIAS = 30; // hasta 1 mes antes
 export const PASO_MIN = 30; // se ofrecen horarios cada 30 min
 
@@ -73,13 +74,23 @@ function fechaAStr(d: Date): string {
 }
 
 // Rango de fechas permitido para el selector (YYYY-MM-DD).
+// Regla: hasta las 6pm del día anterior se puede agendar para el día siguiente.
+// Si ya pasaron las 6pm, el día siguiente ya no está disponible (mínimo pasado
+// mañana).
 export function rangoFechas(): { min: string; max: string } {
   const hoy = new Date();
+  const diasMin = hoy.getHours() >= CORTE_HORA ? MIN_DIAS + 1 : MIN_DIAS;
   const min = new Date(hoy);
-  min.setDate(min.getDate() + MIN_DIAS);
+  min.setDate(min.getDate() + diasMin);
   const max = new Date(hoy);
   max.setDate(max.getDate() + MAX_DIAS);
   return { min: fechaAStr(min), max: fechaAStr(max) };
+}
+
+// Convierte "YYYY-MM-DD" a "DD/MM/YYYY" (formato que usamos en toda la app).
+export function formatearFecha(fechaStr: string): string {
+  const [y, m, d] = fechaStr.split("-");
+  return `${d}/${m}/${y}`;
 }
 
 // Igual que generarSlots, pero quita las horas que chocan con citas ya

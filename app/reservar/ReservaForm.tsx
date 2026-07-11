@@ -9,7 +9,12 @@ import {
   politicaCancelacion,
   DESCUENTO_CUMPLE,
 } from "@/app/lib/servicios";
-import { estaAbierto, nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
+import {
+  estaAbierto,
+  nombreDia,
+  rangoFechas,
+  formatearFecha,
+} from "@/app/lib/disponibilidad";
 import Calendario from "./Calendario";
 import CalendarIcon from "@/app/components/CalendarIcon";
 import ClockIcon from "@/app/components/ClockIcon";
@@ -169,7 +174,7 @@ export default function ReservaForm({
         <p className="mt-2 text-muted">
           Recibimos tu solicitud para el{" "}
           <strong>
-            {nombreDia(fecha)} {fecha}
+            {nombreDia(fecha)} {formatearFecha(fecha)}
           </strong>{" "}
           a las <strong>{hora}</strong>. Revisaremos tu comprobante y te
           confirmaremos por WhatsApp.
@@ -203,7 +208,7 @@ export default function ReservaForm({
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
             <span className="flex items-center gap-1.5">
               <CalendarIcon className="h-4 w-4 text-wine" />
-              {nombreDia(fecha)} {fecha}
+              {nombreDia(fecha)} {formatearFecha(fecha)}
             </span>
             <span className="flex items-center gap-1.5">
               <ClockIcon className="h-4 w-4 text-wine" />
@@ -461,7 +466,7 @@ export default function ReservaForm({
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink">
               <span className="flex items-center gap-1.5">
                 <CalendarIcon className="h-4 w-4 text-wine" />
-                {nombreDia(fecha)} {fecha}
+                {nombreDia(fecha)} {formatearFecha(fecha)}
               </span>
               <span className="flex items-center gap-1.5">
                 <ClockIcon className="h-4 w-4 text-wine" />

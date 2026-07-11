@@ -5,7 +5,7 @@ import Calendario from "@/app/reservar/Calendario";
 import CalendarIcon from "@/app/components/CalendarIcon";
 import ClockIcon from "@/app/components/ClockIcon";
 import AlertIcon from "@/app/components/AlertIcon";
-import { nombreDia, rangoFechas } from "@/app/lib/disponibilidad";
+import { nombreDia, rangoFechas, formatearFecha } from "@/app/lib/disponibilidad";
 
 type Datos = {
   token: string;
@@ -143,7 +143,7 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
         <div className="mt-3 flex items-center gap-2 text-sm text-ink">
           <CalendarIcon className="h-4 w-4 shrink-0 text-wine" />
           <span>
-            <strong>{nombreDia(fecha)}</strong> {fecha}
+            <strong>{nombreDia(fecha)}</strong> {formatearFecha(fecha)}
           </span>
         </div>
         <div className="mt-1 flex items-center gap-2 text-sm text-ink">
