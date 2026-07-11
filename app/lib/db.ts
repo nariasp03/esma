@@ -320,20 +320,6 @@ export async function reagendarReserva(
   return (r.rowCount ?? 0) > 0;
 }
 
-export async function listarReservas(): Promise<Reserva[]> {
-  await ensureTable();
-  const r = await pool.query<Reserva>(
-    `SELECT id, creado_en, nombre, whatsapp, primera_vez,
-            to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
-            servicios, total, anticipo,
-            to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
-            hora_cita, duracion_min, comprobante, metodo_pago, estado,
-            confirmada_clienta, token
-     FROM reservas ORDER BY fecha_cita, hora_cita`,
-  );
-  return r.rows;
-}
-
 // ----- Funciones para el panel de administración -----
 
 // Como el comprobante es una imagen grande (base64), NO lo mandamos en la

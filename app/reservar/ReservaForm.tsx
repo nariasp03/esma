@@ -91,10 +91,7 @@ export default function ReservaForm({
   const abierto = fecha ? estaAbierto(fecha) : true;
 
   useEffect(() => {
-    if (!fecha || totalMin <= 0 || !estaAbierto(fecha)) {
-      setSlots([]);
-      return;
-    }
+    if (!fecha || totalMin <= 0 || !estaAbierto(fecha)) return;
     let cancelado = false;
     setCargandoSlots(true);
     fetch(`/api/disponibilidad?fecha=${fecha}&duracion=${totalMin}`)

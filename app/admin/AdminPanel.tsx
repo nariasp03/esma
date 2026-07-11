@@ -443,10 +443,7 @@ function ReagendarModal({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!fecha) {
-      setSlots([]);
-      return;
-    }
+    if (!fecha) return;
     let cancelado = false;
     setCargandoSlots(true);
     fetch(

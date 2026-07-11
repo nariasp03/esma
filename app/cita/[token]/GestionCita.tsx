@@ -48,10 +48,7 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
   const esPasada = fecha < hoyStr;
 
   useEffect(() => {
-    if (!nuevaFecha) {
-      setSlots([]);
-      return;
-    }
+    if (!nuevaFecha) return;
     let cancelado = false;
     setCargandoSlots(true);
     fetch(
