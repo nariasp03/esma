@@ -106,6 +106,11 @@ async function ensureTable() {
   await pool.query(
     `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS reagendada BOOLEAN NOT NULL DEFAULT false;`,
   );
+  // Marca una cancelación nueva (hecha por la clienta) que el admin aún no ha
+  // revisado (para la pestaña "Canceladas" y su marca de atención).
+  await pool.query(
+    `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS cancelacion_nueva BOOLEAN NOT NULL DEFAULT false;`,
+  );
   tablaLista = true;
 }
 
@@ -299,8 +304,10 @@ export async function reservasPorNombre(nombre: string): Promise<Reserva[]> {
 
 export async function cancelarReserva(token: string): Promise<boolean> {
   await ensureTable();
+  // La cancela la clienta: la marcamos como cancelación nueva para que el admin
+  // la revise en la pestaña "Canceladas".
   const r = await pool.query(
-    "UPDATE reservas SET estado = 'Cancelada' WHERE token = $1 RETURNING id",
+    "UPDATE reservas SET estado = 'Cancelada', cancelacion_nueva = true WHERE token = $1 RETURNING id",
     [token],
   );
   return (r.rowCount ?? 0) > 0;
@@ -327,6 +334,7 @@ export async function reagendarReserva(
 export type ReservaAdmin = Omit<Reserva, "comprobante"> & {
   tiene_comprobante: boolean;
   reagendada: boolean;
+  cancelacion_nueva: boolean;
 };
 
 export async function listarReservasAdmin(): Promise<ReservaAdmin[]> {
@@ -337,7 +345,7 @@ export async function listarReservasAdmin(): Promise<ReservaAdmin[]> {
             servicios, total, anticipo,
             to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
             hora_cita, duracion_min, metodo_pago, estado,
-            confirmada_clienta, token, reagendada,
+            confirmada_clienta, token, reagendada, cancelacion_nueva,
             (comprobante IS NOT NULL AND comprobante <> '') AS tiene_comprobante
      FROM reservas
      ORDER BY fecha_cita DESC, hora_cita DESC`,
@@ -377,6 +385,26 @@ export async function actualizarEstadoReserva(
   const r = await pool.query(
     "UPDATE reservas SET estado = $1 WHERE id = $2 RETURNING id",
     [estado, id],
+  );
+  return (r.rowCount ?? 0) > 0;
+}
+
+// El admin ya vio la reagenda: quita la marca (sale de "Reagendadas").
+export async function marcarReagendaVista(id: number): Promise<boolean> {
+  await ensureTable();
+  const r = await pool.query(
+    "UPDATE reservas SET reagendada = false WHERE id = $1 RETURNING id",
+    [id],
+  );
+  return (r.rowCount ?? 0) > 0;
+}
+
+// El admin ya vio la cancelación: quita la marca (sale de "Canceladas").
+export async function marcarCancelacionVista(id: number): Promise<boolean> {
+  await ensureTable();
+  const r = await pool.query(
+    "UPDATE reservas SET cancelacion_nueva = false WHERE id = $1 RETURNING id",
+    [id],
   );
   return (r.rowCount ?? 0) > 0;
 }

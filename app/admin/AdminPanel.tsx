@@ -8,6 +8,7 @@ import CalendarIcon from "@/app/components/CalendarIcon";
 import ClockIcon from "@/app/components/ClockIcon";
 import AlertIcon from "@/app/components/AlertIcon";
 import CloseIcon from "@/app/components/CloseIcon";
+import CheckIcon from "@/app/components/CheckIcon";
 import { nombreDia, rangoFechas, formatearFecha } from "@/app/lib/disponibilidad";
 
 const colorEstado: Record<string, string> = {
@@ -27,6 +28,9 @@ const FILTROS = [
   "Todas",
 ] as const;
 type Filtro = (typeof FILTROS)[number];
+
+// Categorías que requieren que el admin las revise (se marcan en rojo).
+const ATENCION: Filtro[] = ["Solicitudes", "Reagendadas", "Cancelada"];
 
 function hoyStr(): string {
   const d = new Date();
@@ -68,6 +72,10 @@ export default function AdminPanel({
       ).length;
     if (f === "Solicitudes") return conteos["Pendiente"] ?? 0;
     if (f === "Reagendadas") return reservas.filter((r) => r.reagendada).length;
+    if (f === "Cancelada")
+      return reservas.filter(
+        (r) => r.estado === "Cancelada" && r.cancelacion_nueva,
+      ).length;
     return conteos[f] ?? 0;
   }
 
@@ -80,6 +88,8 @@ export default function AdminPanel({
           return r.fecha_cita === hoy && r.estado !== "Cancelada";
         if (filtro === "Solicitudes") return r.estado === "Pendiente";
         if (filtro === "Reagendadas") return r.reagendada;
+        if (filtro === "Cancelada")
+          return r.estado === "Cancelada" && r.cancelacion_nueva;
         return r.estado === filtro;
       })
       .filter((r) => (q ? r.nombre.toLowerCase().includes(q) : true))
@@ -126,8 +136,25 @@ export default function AdminPanel({
         </button>
       </div>
 
+      {/* Aviso "Por revisar" en rojo: categorías con citas que requieren
+          atención. Se ve en celular y en compu, y al tocarlas filtra. */}
+      {ATENCION.some((f) => contar(f) > 0) && (
+        <div className="mt-6 flex flex-wrap items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3">
+          <span className="text-sm font-semibold text-red-700">Por revisar:</span>
+          {ATENCION.filter((f) => contar(f) > 0).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFiltro(f)}
+              className="rounded-full bg-red-600 px-3 py-1 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+            >
+              {f} ({contar(f)})
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Filtros: menú desplegable en celular, botones en pantalla grande */}
-      <div className="mt-6 sm:hidden">
+      <div className="mt-4 sm:hidden">
         <select
           value={filtro}
           onChange={(e) => setFiltro(e.target.value as Filtro)}
@@ -141,20 +168,33 @@ export default function AdminPanel({
         </select>
       </div>
 
-      <div className="mt-6 hidden flex-wrap gap-2 sm:flex">
-        {FILTROS.map((f) => (
-          <button
-            key={f}
-            onClick={() => setFiltro(f)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              filtro === f
-                ? "bg-wine text-white"
-                : "border border-line bg-white text-ink hover:bg-beige"
-            }`}
-          >
-            {f} <span className="opacity-70">({contar(f)})</span>
-          </button>
-        ))}
+      <div className="mt-4 hidden flex-wrap gap-2 sm:flex">
+        {FILTROS.map((f) => {
+          const n = contar(f);
+          const alerta = ATENCION.includes(f) && n > 0;
+          return (
+            <button
+              key={f}
+              onClick={() => setFiltro(f)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                filtro === f
+                  ? "bg-wine text-white"
+                  : "border border-line bg-white text-ink hover:bg-beige"
+              }`}
+            >
+              {f}{" "}
+              <span
+                className={
+                  alerta
+                    ? "ml-0.5 inline-block min-w-5 rounded-full bg-red-600 px-1.5 text-center text-xs font-bold text-white"
+                    : "opacity-70"
+                }
+              >
+                {alerta ? n : `(${n})`}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Búsqueda */}
@@ -306,6 +346,22 @@ function CitaCard({
 
       {/* Acciones */}
       <div className="mt-4 flex flex-wrap gap-2">
+        {(r.reagendada || r.cancelacion_nueva) && (
+          <button
+            disabled={procesando}
+            onClick={() =>
+              accion(
+                { accion: "enterada" },
+                { reagendada: false, cancelacion_nueva: false },
+              )
+            }
+            className="inline-flex items-center gap-1.5 rounded-full bg-wine px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-wine-light disabled:opacity-50"
+          >
+            <CheckIcon className="h-4 w-4" />
+            Enterada
+          </button>
+        )}
+
         {r.tiene_comprobante && (
           <button
             onClick={onVerComprobante}

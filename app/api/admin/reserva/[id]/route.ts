@@ -5,12 +5,15 @@ import {
   actualizarEstadoReserva,
   registrarEfectivo,
   reagendarReservaPorId,
+  marcarReagendaVista,
+  marcarCancelacionVista,
   ocupadosDelDia,
 } from "@/app/lib/db";
 import { slotsDisponibles, estaAbierto } from "@/app/lib/disponibilidad";
 
 // PATCH /api/admin/reserva/[id]
 // Acciones: aprobar | rechazar | efectivo | completar | cancelar | reagendar
+//           | enterada
 export async function PATCH(
   request: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -54,6 +57,16 @@ export async function PATCH(
   if (accion === "completar") {
     await actualizarEstadoReserva(id, "Completada");
     return NextResponse.json({ ok: true, estado: "Completada" });
+  }
+
+  if (accion === "enterada") {
+    await marcarReagendaVista(id);
+    await marcarCancelacionVista(id);
+    return NextResponse.json({
+      ok: true,
+      reagendada: false,
+      cancelacion_nueva: false,
+    });
   }
 
   if (accion === "cancelar") {
