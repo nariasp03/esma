@@ -31,6 +31,13 @@ function cumpleTexto(f: string | null): string {
   return `${Number(d)} de ${MESES[Number(m) - 1]}`;
 }
 
+function hoyStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate(),
+  ).padStart(2, "0")}`;
+}
+
 export default function PanelCliente({
   nombre,
   fechaNacimiento,
@@ -42,6 +49,29 @@ export default function PanelCliente({
     await fetch("/api/cuenta/salir", { method: "POST" });
     router.refresh();
   }
+
+  const hoy = hoyStr();
+  // Grupo: 0 = próximas activas, 1 = pasadas activas, 2 = canceladas (al fondo).
+  const grupo = (r: CitaResumen) =>
+    r.estado === "Cancelada" ? 2 : r.fecha_cita >= hoy ? 0 : 1;
+  const ordenadas = [...reservas].sort((a, b) => {
+    const ga = grupo(a);
+    const gb = grupo(b);
+    if (ga !== gb) return ga - gb;
+    // Próximas: por fecha ascendente. Pasadas/canceladas: más recientes primero.
+    if (ga === 0)
+      return (
+        a.fecha_cita.localeCompare(b.fecha_cita) ||
+        a.hora_cita.localeCompare(b.hora_cita)
+      );
+    return (
+      b.fecha_cita.localeCompare(a.fecha_cita) ||
+      b.hora_cita.localeCompare(a.hora_cita)
+    );
+  });
+  const proxima =
+    ordenadas.length > 0 && grupo(ordenadas[0]) === 0 ? ordenadas[0] : null;
+  const restantes = proxima ? ordenadas.slice(1) : ordenadas;
 
   return (
     <div>
@@ -79,11 +109,32 @@ export default function PanelCliente({
           Aún no tienes citas. ¡Agenda la primera!
         </p>
       ) : (
-        <div className="mt-4 space-y-10">
-          {reservas.map((c) => (
-            <GestionCita key={c.id} reserva={c} />
-          ))}
-        </div>
+        <>
+          {proxima && (
+            <div>
+              <h3 className="mt-4 font-display text-lg font-bold text-wine">
+                Próxima cita
+              </h3>
+              <div className="mt-3 space-y-10">
+                <GestionCita reserva={proxima} />
+              </div>
+            </div>
+          )}
+          {restantes.length > 0 && (
+            <div>
+              {proxima && (
+                <h3 className="mt-8 font-display text-lg font-bold text-ink">
+                  Otras citas
+                </h3>
+              )}
+              <div className={`${proxima ? "mt-3" : "mt-4"} space-y-10`}>
+                {restantes.map((c) => (
+                  <GestionCita key={c.id} reserva={c} />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <p className="mt-8 rounded-xl border border-line bg-white p-4 text-xs text-muted">
