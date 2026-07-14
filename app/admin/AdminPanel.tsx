@@ -18,6 +18,7 @@ const colorEstado: Record<string, string> = {
 };
 
 const FILTROS = [
+  "Citas de hoy",
   "Solicitudes",
   "Reagendadas",
   "Aprobada",
@@ -61,6 +62,10 @@ export default function AdminPanel({
 
   function contar(f: Filtro): number {
     if (f === "Todas") return reservas.length;
+    if (f === "Citas de hoy")
+      return reservas.filter(
+        (r) => r.fecha_cita === hoy && r.estado !== "Cancelada",
+      ).length;
     if (f === "Solicitudes") return conteos["Pendiente"] ?? 0;
     if (f === "Reagendadas") return reservas.filter((r) => r.reagendada).length;
     return conteos[f] ?? 0;
@@ -71,6 +76,8 @@ export default function AdminPanel({
     return reservas
       .filter((r) => {
         if (filtro === "Todas") return true;
+        if (filtro === "Citas de hoy")
+          return r.fecha_cita === hoy && r.estado !== "Cancelada";
         if (filtro === "Solicitudes") return r.estado === "Pendiente";
         if (filtro === "Reagendadas") return r.reagendada;
         return r.estado === filtro;
