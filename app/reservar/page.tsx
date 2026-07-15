@@ -47,6 +47,7 @@ export default async function ReservarPage({
     duracion_min: r.duracion_min,
     anticipo: r.anticipo,
     estado: r.estado,
+    tiene_comprobante: r.tiene_comprobante,
   }));
 
   return (

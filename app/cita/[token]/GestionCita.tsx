@@ -5,6 +5,7 @@ import Calendario from "@/app/reservar/Calendario";
 import CalendarIcon from "@/app/components/CalendarIcon";
 import ClockIcon from "@/app/components/ClockIcon";
 import AlertIcon from "@/app/components/AlertIcon";
+import CloseIcon from "@/app/components/CloseIcon";
 import { nombreDia, rangoFechas, formatearFecha } from "@/app/lib/disponibilidad";
 
 type Datos = {
@@ -17,6 +18,7 @@ type Datos = {
   duracion_min: number;
   anticipo: number;
   estado: string;
+  tiene_comprobante?: boolean;
 };
 
 const colorEstado: Record<string, string> = {
@@ -40,6 +42,29 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
+
+  // Ver el comprobante que subió la clienta.
+  const [verComprobante, setVerComprobante] = useState(false);
+  const [comprobanteSrc, setComprobanteSrc] = useState("");
+  const [cargandoComp, setCargandoComp] = useState(false);
+  const [errorComp, setErrorComp] = useState("");
+
+  async function abrirComprobante() {
+    setVerComprobante(true);
+    if (comprobanteSrc) return; // ya está cargado
+    setCargandoComp(true);
+    setErrorComp("");
+    try {
+      const r = await fetch(`/api/cita/${reserva.token}/comprobante`);
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok || !d.comprobante) throw new Error();
+      setComprobanteSrc(d.comprobante);
+    } catch {
+      setErrorComp("No se pudo cargar tu comprobante.");
+    } finally {
+      setCargandoComp(false);
+    }
+  }
 
   const { min, max } = useMemo(() => rangoFechas(), []);
 
@@ -148,6 +173,15 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
           <span>{hora}</span>
         </div>
         <div className="mt-2 text-sm text-muted">Anticipo: ${reserva.anticipo}</div>
+        {reserva.tiene_comprobante && (
+          <button
+            type="button"
+            onClick={abrirComprobante}
+            className="mt-3 text-sm font-medium text-wine hover:underline"
+          >
+            Ver mi comprobante
+          </button>
+        )}
       </div>
 
       {mensaje && (
@@ -254,6 +288,46 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
             >
               Volver
             </button>
+          </div>
+        </div>
+      )}
+
+      {verComprobante && (
+        <div
+          onClick={() => setVerComprobante(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-2xl bg-white p-4"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-lg font-bold text-wine">
+                Mi comprobante
+              </h3>
+              <button
+                type="button"
+                onClick={() => setVerComprobante(false)}
+                className="grid h-8 w-8 place-items-center rounded-lg border border-line text-ink hover:bg-beige"
+                aria-label="Cerrar"
+              >
+                <CloseIcon className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-4">
+              {errorComp ? (
+                <p className="text-sm text-danger">{errorComp}</p>
+              ) : cargandoComp || !comprobanteSrc ? (
+                <p className="text-sm text-muted">Cargando…</p>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={comprobanteSrc}
+                  alt="Mi comprobante"
+                  className="w-full rounded-xl"
+                />
+              )}
+            </div>
           </div>
         </div>
       )}

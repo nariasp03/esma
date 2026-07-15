@@ -53,6 +53,7 @@ export default async function CitaPage({
           duracion_min: reserva.duracion_min,
           anticipo: reserva.anticipo,
           estado: reserva.estado,
+          tiene_comprobante: !!reserva.comprobante,
         }}
       />
       <p className="mt-8 rounded-xl border border-line bg-white p-4 text-xs text-muted">

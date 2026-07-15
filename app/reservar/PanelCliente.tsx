@@ -17,6 +17,7 @@ type CitaResumen = {
   duracion_min: number;
   anticipo: number;
   estado: string;
+  tiene_comprobante: boolean;
 };
 
 type Props = {

@@ -183,15 +183,16 @@ export async function getClientePorId(id: number): Promise<Cliente | null> {
 
 export async function reservasPorCliente(
   clienteId: number,
-): Promise<Reserva[]> {
+): Promise<(Reserva & { tiene_comprobante: boolean })[]> {
   await ensureTable();
-  const r = await pool.query<Reserva>(
+  const r = await pool.query<Reserva & { tiene_comprobante: boolean }>(
     `SELECT id, creado_en, nombre, whatsapp, primera_vez,
             to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
             servicios, total, anticipo,
             to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
             hora_cita, duracion_min, NULL AS comprobante, metodo_pago, estado,
-            confirmada_clienta, token
+            confirmada_clienta, token,
+            (comprobante IS NOT NULL AND comprobante <> '') AS tiene_comprobante
      FROM reservas WHERE cliente_id = $1
      ORDER BY fecha_cita DESC, hora_cita DESC`,
     [clienteId],
