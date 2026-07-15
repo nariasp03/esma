@@ -7,7 +7,8 @@ export default function PoliticaCancelacion({
 }: {
   className?: string;
 }) {
-  const texto = politicaCancelacion.replace(/^Política de cancelación:\s*/, "");
+  const sinPrefijo = politicaCancelacion.replace(/^Política de cancelación:\s*/, "");
+  const texto = sinPrefijo.charAt(0).toUpperCase() + sinPrefijo.slice(1);
   return (
     <div
       className={`rounded-2xl border border-wine/25 bg-beige/70 p-5 ${className}`}
