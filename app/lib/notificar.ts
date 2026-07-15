@@ -92,30 +92,27 @@ type CitaDia = {
   whatsapp: string;
 };
 
-// Mensaje de confirmación que la clienta recibe (ya escrito).
+// Mensaje de confirmación (concreto, para que el admin lo copie y lo mande a
+// la clienta).
 function mensajeConfirmacion(c: CitaDia, fecha: string): string {
   return (
-    `¡Hola ${c.nombre}! 💅✨\n` +
-    `Te recordamos tu cita en esma:\n` +
-    `📅 ${nombreDia(fecha)} ${formatearFecha(fecha)}\n` +
-    `🕐 ${c.hora_cita}\n` +
-    `💅 ${c.servicios}\n\n` +
-    `Por favor responde este mensaje para confirmar que sí asistirás. Si no nos respondes, daremos por hecho que tu cita sigue en pie.\n\n` +
-    `Recuerda nuestra política de cancelación: si necesitas cancelar, avísanos con al menos 24 horas de anticipación y te reembolsamos tu anticipo. Con menos tiempo, el anticipo no es reembolsable.\n\n` +
-    `¡Te esperamos con mucho gusto para consentirte! 💖`
+    `¡Hola ${c.nombre}! 💅 Te recordamos tu cita en esma: ` +
+    `${nombreDia(fecha)} ${formatearFecha(fecha)} a las ${c.hora_cita} (${c.servicios}). ` +
+    `Por favor responde este mensaje para confirmar tu asistencia; si no respondes, tomaremos tu cita como confirmada. ` +
+    `Recuerda: si cancelas con menos de 24 horas de anticipación, el anticipo no es reembolsable. ` +
+    `¡Te esperamos con mucho gusto! 💖`
   );
 }
 
-// Link de WhatsApp que abre el chat de la clienta con el mensaje ya escrito.
-function linkConfirmacion(c: CitaDia, fecha: string): string {
-  let n = c.whatsapp.replace(/\D/g, "");
+// Link corto que abre el chat de WhatsApp de la clienta.
+function chatLink(whatsapp: string): string {
+  let n = whatsapp.replace(/\D/g, "");
   if (n.length === 10) n = "52" + n; // México
-  return `https://wa.me/${n}?text=${encodeURIComponent(mensajeConfirmacion(c, fecha))}`;
+  return `https://wa.me/${n}`;
 }
 
-// Recordatorio de las citas de MAÑANA (día antes, 9am). Un solo mensaje con un
-// LINK por clienta: al tocarlo se abre su chat con el mensaje ya escrito, solo
-// hay que darle Enviar.
+// Recordatorio de las citas de MAÑANA (día antes, 9am). Un solo mensaje: por
+// cada clienta, el link corto de su chat y el mensaje ya escrito para copiar.
 export async function avisarRecordatorioManana(d: {
   fecha: string;
   citas: CitaDia[];
@@ -123,13 +120,15 @@ export async function avisarRecordatorioManana(d: {
   if (d.citas.length === 0) return;
   const bloques = d.citas
     .map(
-      (c) =>
-        `• ${c.hora_cita} — ${c.nombre} (${c.servicios})\n${linkConfirmacion(c, d.fecha)}`,
+      (c, i) =>
+        `${i + 1}) ${c.hora_cita} · ${c.nombre} · ${c.servicios}\n` +
+        `Chat: ${chatLink(c.whatsapp)}\n` +
+        `Mensaje: ${mensajeConfirmacion(c, d.fecha)}`,
     )
     .join("\n\n");
   const texto =
     `🌅 Recordatorio esma\n` +
-    `MAÑANA (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s). Toca el link de cada clienta para enviarle su confirmación (ya viene escrita, solo dale Enviar):\n\n` +
+    `MAÑANA (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s). Abre el chat de cada clienta y mándale su confirmación (copia el texto):\n\n` +
     bloques;
   await enviarWhatsApp(texto);
 }

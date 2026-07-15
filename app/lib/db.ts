@@ -125,6 +125,17 @@ function soloDigitos(t: string): string {
   return t.replace(/\D/g, "");
 }
 
+// Pone la primera letra de cada palabra en mayúscula (ej. "maría lópez" →
+// "María López"), para guardar el nombre bien escrito.
+function capitalizarNombre(nombre: string): string {
+  return nombre
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((p) => (p ? p.charAt(0).toUpperCase() + p.slice(1) : p))
+    .join(" ");
+}
+
 // La identidad de la cuenta es el TELÉFONO (único). El nombre es solo para
 // identificar a la clienta.
 export async function buscarClientePorTelefono(
@@ -148,15 +159,16 @@ export async function crearCliente(
   await ensureTable();
   const tel = soloDigitos(telefono);
   const existente = await buscarClientePorTelefono(tel);
+  const nombreCap = capitalizarNombre(nombre);
   if (existente) {
     // Ya hay cuenta con ese teléfono: actualizamos nombre y cumpleaños.
     await pool.query(
       "UPDATE clientes SET nombre = $1, fecha_nacimiento = COALESCE($2, fecha_nacimiento) WHERE id = $3",
-      [nombre.trim(), fechaNacimiento, existente.id],
+      [nombreCap, fechaNacimiento, existente.id],
     );
     return {
       ...existente,
-      nombre: nombre.trim(),
+      nombre: nombreCap,
       fecha_nacimiento: fechaNacimiento ?? existente.fecha_nacimiento,
     };
   }
@@ -165,7 +177,7 @@ export async function crearCliente(
      VALUES ($1,$2,$3)
      RETURNING id, nombre, telefono,
                to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento`,
-    [nombre.trim(), tel, fechaNacimiento],
+    [nombreCap, tel, fechaNacimiento],
   );
   return r.rows[0];
 }
