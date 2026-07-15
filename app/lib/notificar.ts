@@ -92,7 +92,7 @@ type CitaDia = {
   whatsapp: string;
 };
 
-// Mensaje de confirmación (listo para que el admin lo reenvíe a la clienta).
+// Mensaje de confirmación que la clienta recibe (ya escrito).
 function mensajeConfirmacion(c: CitaDia, fecha: string): string {
   return (
     `¡Hola ${c.nombre}! 💅✨\n` +
@@ -106,28 +106,32 @@ function mensajeConfirmacion(c: CitaDia, fecha: string): string {
   );
 }
 
-// Recordatorio de las citas de MAÑANA (día antes, 9am): un resumen con nombres
-// y WhatsApps, y luego un mensaje por clienta listo para reenviar.
+// Link de WhatsApp que abre el chat de la clienta con el mensaje ya escrito.
+function linkConfirmacion(c: CitaDia, fecha: string): string {
+  let n = c.whatsapp.replace(/\D/g, "");
+  if (n.length === 10) n = "52" + n; // México
+  return `https://wa.me/${n}?text=${encodeURIComponent(mensajeConfirmacion(c, fecha))}`;
+}
+
+// Recordatorio de las citas de MAÑANA (día antes, 9am). Un solo mensaje con un
+// LINK por clienta: al tocarlo se abre su chat con el mensaje ya escrito, solo
+// hay que darle Enviar.
 export async function avisarRecordatorioManana(d: {
   fecha: string;
   citas: CitaDia[];
 }): Promise<void> {
   if (d.citas.length === 0) return;
-  const lista = d.citas
-    .map((c) => `• ${c.hora_cita} — ${c.nombre} — WhatsApp: ${c.whatsapp}`)
-    .join("\n");
-  const resumen =
+  const bloques = d.citas
+    .map(
+      (c) =>
+        `• ${c.hora_cita} — ${c.nombre} (${c.servicios})\n${linkConfirmacion(c, d.fecha)}`,
+    )
+    .join("\n\n");
+  const texto =
     `🌅 Recordatorio esma\n` +
-    `MAÑANA (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s):\n` +
-    lista +
-    `\n\nAbajo te paso los mensajes listos para reenviar a cada clienta. 👇`;
-  await enviarWhatsApp(resumen);
-
-  // Un mensaje por clienta (con una pausa para no saturar CallMeBot).
-  for (const c of d.citas) {
-    await enviarWhatsApp(mensajeConfirmacion(c, d.fecha));
-    await new Promise((r) => setTimeout(r, 1500));
-  }
+    `MAÑANA (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s). Toca el link de cada clienta para enviarle su confirmación (ya viene escrita, solo dale Enviar):\n\n` +
+    bloques;
+  await enviarWhatsApp(texto);
 }
 
 // Recordatorio de las citas de HOY (mismo día, 8am): solo el resumen.
