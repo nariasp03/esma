@@ -53,6 +53,17 @@ export default function Footer() {
           >
             Ver en el mapa →
           </a>
+          <p className={`mt-2 text-sm ${dark ? "text-white/80" : "text-ink"}`}>
+            Tel:{" "}
+            <a
+              href={`tel:${negocio.telefono}`}
+              className={`font-medium hover:underline ${
+                dark ? "text-beige-dark hover:text-white" : "text-wine"
+              }`}
+            >
+              {negocio.telefonoTexto}
+            </a>
+          </p>
           <p className={`mt-2 text-sm ${dark ? "text-white/70" : "text-muted"}`}>
             Sólo con cita en el local.
           </p>

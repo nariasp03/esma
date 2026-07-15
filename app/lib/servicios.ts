@@ -34,6 +34,9 @@ export const negocio = {
   direccion: "Calle Guadalupe 709, Heliodoro García",
   instagram: "https://www.instagram.com/esma.ags",
   instagramUser: "@esma.ags",
+  // TEMPORAL: número de Natalia para pruebas. Cambiar por el del local.
+  telefono: "+524491863483",
+  telefonoTexto: "449 186 3483",
 };
 
 // Datos para el anticipo (transferencia SPEI)
