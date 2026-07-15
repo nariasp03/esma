@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { citasDelDia } from "@/app/lib/db";
-import { avisarRecordatorioDia } from "@/app/lib/notificar";
+import {
+  avisarRecordatorioManana,
+  avisarRecordatorioHoy,
+} from "@/app/lib/notificar";
 import { fechaMexico } from "@/app/lib/disponibilidad";
 
 // GET /api/cron/recordatorio?tipo=hoy|manana&clave=SECRET
@@ -19,11 +22,11 @@ export async function GET(request: Request) {
 
   const fecha = fechaMexico(tipo === "manana" ? 1 : 0);
   const citas = await citasDelDia(fecha);
-  await avisarRecordatorioDia({
-    cuando: tipo === "manana" ? "mañana" : "hoy",
-    fecha,
-    citas,
-  });
+  if (tipo === "manana") {
+    await avisarRecordatorioManana({ fecha, citas });
+  } else {
+    await avisarRecordatorioHoy({ fecha, citas });
+  }
 
   return NextResponse.json({ ok: true, tipo, fecha, enviadas: citas.length });
 }

@@ -70,21 +70,78 @@ export async function avisarReagenda(d: DatosReagenda): Promise<void> {
   await enviarWhatsApp(texto);
 }
 
-// Recordatorio de las citas de un día (para el admin). "cuando" = "hoy" o
-// "mañana". Si no hay citas, no manda nada.
-export async function avisarRecordatorioDia(d: {
-  cuando: string;
+// Aviso de que una clienta canceló su cita.
+export async function avisarCancelacion(d: {
+  nombre: string;
+  servicios: string;
   fecha: string;
-  citas: { nombre: string; servicios: string; hora_cita: string }[];
+  hora: string;
+}): Promise<void> {
+  const texto =
+    `❌ Cancelación en esma\n` +
+    `La clienta ${d.nombre} canceló su cita.\n` +
+    `Servicio(s): ${d.servicios}\n` +
+    `Era: ${nombreDia(d.fecha)} ${formatearFecha(d.fecha)} ${d.hora}`;
+  await enviarWhatsApp(texto);
+}
+
+type CitaDia = {
+  nombre: string;
+  servicios: string;
+  hora_cita: string;
+  whatsapp: string;
+};
+
+// Mensaje de confirmación (listo para que el admin lo reenvíe a la clienta).
+function mensajeConfirmacion(c: CitaDia, fecha: string): string {
+  return (
+    `¡Hola ${c.nombre}! 💅✨\n` +
+    `Te recordamos tu cita en esma:\n` +
+    `📅 ${nombreDia(fecha)} ${formatearFecha(fecha)}\n` +
+    `🕐 ${c.hora_cita}\n` +
+    `💅 ${c.servicios}\n\n` +
+    `Por favor responde este mensaje para confirmar que sí asistirás. Si no nos respondes, daremos por hecho que tu cita sigue en pie.\n\n` +
+    `Recuerda nuestra política de cancelación: si necesitas cancelar, avísanos con al menos 24 horas de anticipación y te reembolsamos tu anticipo. Con menos tiempo, el anticipo no es reembolsable.\n\n` +
+    `¡Te esperamos con mucho gusto para consentirte! 💖`
+  );
+}
+
+// Recordatorio de las citas de MAÑANA (día antes, 9am): un resumen con nombres
+// y WhatsApps, y luego un mensaje por clienta listo para reenviar.
+export async function avisarRecordatorioManana(d: {
+  fecha: string;
+  citas: CitaDia[];
+}): Promise<void> {
+  if (d.citas.length === 0) return;
+  const lista = d.citas
+    .map((c) => `• ${c.hora_cita} — ${c.nombre} — WhatsApp: ${c.whatsapp}`)
+    .join("\n");
+  const resumen =
+    `🌅 Recordatorio esma\n` +
+    `MAÑANA (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s):\n` +
+    lista +
+    `\n\nAbajo te paso los mensajes listos para reenviar a cada clienta. 👇`;
+  await enviarWhatsApp(resumen);
+
+  // Un mensaje por clienta (con una pausa para no saturar CallMeBot).
+  for (const c of d.citas) {
+    await enviarWhatsApp(mensajeConfirmacion(c, d.fecha));
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+}
+
+// Recordatorio de las citas de HOY (mismo día, 8am): solo el resumen.
+export async function avisarRecordatorioHoy(d: {
+  fecha: string;
+  citas: CitaDia[];
 }): Promise<void> {
   if (d.citas.length === 0) return;
   const lista = d.citas
     .map((c) => `• ${c.hora_cita} — ${c.nombre} (${c.servicios})`)
     .join("\n");
-  const cuandoMay = d.cuando === "mañana" ? "MAÑANA" : "HOY";
   const texto =
-    `⏰ Recordatorio esma\n` +
-    `${cuandoMay} (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s):\n` +
+    `☀️ Recordatorio esma\n` +
+    `HOY (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s):\n` +
     lista;
   await enviarWhatsApp(texto);
 }

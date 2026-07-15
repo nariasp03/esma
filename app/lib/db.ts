@@ -329,16 +329,22 @@ export async function reagendarReserva(
 }
 
 // Citas de un día (no canceladas), ordenadas por hora. Para los recordatorios.
-export async function citasDelDia(
-  fecha: string,
-): Promise<{ nombre: string; servicios: string; hora_cita: string }[]> {
+export async function citasDelDia(fecha: string): Promise<
+  {
+    nombre: string;
+    servicios: string;
+    hora_cita: string;
+    whatsapp: string;
+  }[]
+> {
   await ensureTable();
   const r = await pool.query<{
     nombre: string;
     servicios: string;
     hora_cita: string;
+    whatsapp: string;
   }>(
-    `SELECT nombre, servicios, hora_cita FROM reservas
+    `SELECT nombre, servicios, hora_cita, whatsapp FROM reservas
      WHERE fecha_cita = $1 AND estado <> 'Cancelada'
      ORDER BY hora_cita`,
     [fecha],
