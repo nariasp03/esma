@@ -93,6 +93,22 @@ export function formatearFecha(fechaStr: string): string {
   return `${d}/${m}/${y}`;
 }
 
+// Fecha (YYYY-MM-DD) en la zona horaria de Aguascalientes, con un desfase de
+// días opcional (0 = hoy, 1 = mañana). Se usa en el servidor para los
+// recordatorios, porque Railway corre en UTC.
+export function fechaMexico(offsetDias = 0): string {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Mexico_City",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const y = Number(partes.find((p) => p.type === "year")?.value);
+  const m = Number(partes.find((p) => p.type === "month")?.value);
+  const d = Number(partes.find((p) => p.type === "day")?.value);
+  return new Date(Date.UTC(y, m - 1, d + offsetDias)).toISOString().slice(0, 10);
+}
+
 // Igual que generarSlots, pero quita las horas que chocan con citas ya
 // ocupadas (respetando el descanso BUFFER_MIN entre citas).
 export function slotsDisponibles(

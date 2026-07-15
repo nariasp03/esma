@@ -69,3 +69,22 @@ export async function avisarReagenda(d: DatosReagenda): Promise<void> {
     `Ahora: ${nombreDia(d.fechaNueva)} ${formatearFecha(d.fechaNueva)} ${d.horaNueva}`;
   await enviarWhatsApp(texto);
 }
+
+// Recordatorio de las citas de un día (para el admin). "cuando" = "hoy" o
+// "mañana". Si no hay citas, no manda nada.
+export async function avisarRecordatorioDia(d: {
+  cuando: string;
+  fecha: string;
+  citas: { nombre: string; servicios: string; hora_cita: string }[];
+}): Promise<void> {
+  if (d.citas.length === 0) return;
+  const lista = d.citas
+    .map((c) => `• ${c.hora_cita} — ${c.nombre} (${c.servicios})`)
+    .join("\n");
+  const cuandoMay = d.cuando === "mañana" ? "MAÑANA" : "HOY";
+  const texto =
+    `⏰ Recordatorio esma\n` +
+    `${cuandoMay} (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s):\n` +
+    lista;
+  await enviarWhatsApp(texto);
+}
