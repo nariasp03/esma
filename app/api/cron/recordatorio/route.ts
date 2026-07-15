@@ -23,10 +23,12 @@ export async function GET(request: Request) {
   const fecha = fechaMexico(tipo === "manana" ? 1 : 0);
   const citas = await citasDelDia(fecha);
   if (tipo === "manana") {
-    await avisarRecordatorioManana({ fecha, citas });
+    // Los mensajes van espaciados ~20s; no esperamos, se mandan en segundo
+    // plano para que la respuesta sea rápida.
+    void avisarRecordatorioManana({ fecha, citas });
   } else {
     await avisarRecordatorioHoy({ fecha, citas });
   }
 
-  return NextResponse.json({ ok: true, tipo, fecha, enviadas: citas.length });
+  return NextResponse.json({ ok: true, tipo, fecha, citas: citas.length });
 }

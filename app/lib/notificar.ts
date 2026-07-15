@@ -92,45 +92,47 @@ type CitaDia = {
   whatsapp: string;
 };
 
-// Mensaje de confirmación (concreto, para que el admin lo copie y lo mande a
-// la clienta).
+// Segundos entre cada mensaje: CallMeBot los junta en un solo globo si van más
+// seguidos que ~20s. Así llegan separados (para poder reenviarlos).
+const DELAY_MENSAJES = 20000;
+
+// Mensaje de confirmación (listo para que el admin lo reenvíe a la clienta).
 function mensajeConfirmacion(c: CitaDia, fecha: string): string {
   return (
-    `¡Hola ${c.nombre}! 💅 Te recordamos tu cita en esma: ` +
-    `${nombreDia(fecha)} ${formatearFecha(fecha)} a las ${c.hora_cita} (${c.servicios}). ` +
-    `Por favor responde este mensaje para confirmar tu asistencia; si no respondes, tomaremos tu cita como confirmada. ` +
-    `Recuerda: si cancelas con menos de 24 horas de anticipación, el anticipo no es reembolsable. ` +
-    `¡Te esperamos con mucho gusto! 💖`
+    `¡Hola ${c.nombre}! 💅✨\n` +
+    `Te recordamos tu cita en esma:\n` +
+    `📅 ${nombreDia(fecha)} ${formatearFecha(fecha)}\n` +
+    `🕐 ${c.hora_cita}\n` +
+    `💅 ${c.servicios}\n\n` +
+    `Por favor responde este mensaje para confirmar que sí asistirás. Si no nos respondes, daremos por hecho que tu cita sigue en pie.\n\n` +
+    `Recuerda nuestra política de cancelación: si necesitas cancelar, avísanos con al menos 24 horas de anticipación y te reembolsamos tu anticipo. Con menos tiempo, el anticipo no es reembolsable.\n\n` +
+    `¡Te esperamos con mucho gusto para consentirte! 💖`
   );
 }
 
-// Link corto que abre el chat de WhatsApp de la clienta.
-function chatLink(whatsapp: string): string {
-  let n = whatsapp.replace(/\D/g, "");
-  if (n.length === 10) n = "52" + n; // México
-  return `https://wa.me/${n}`;
-}
-
-// Recordatorio de las citas de MAÑANA (día antes, 9am). Un solo mensaje: por
-// cada clienta, el link corto de su chat y el mensaje ya escrito para copiar.
+// Recordatorio de las citas de MAÑANA (día antes, 9am): primero un resumen con
+// nombres y WhatsApps, y luego un mensaje POR CLIENTA (separados ~20s) listo
+// para que el admin lo reenvíe.
 export async function avisarRecordatorioManana(d: {
   fecha: string;
   citas: CitaDia[];
 }): Promise<void> {
   if (d.citas.length === 0) return;
-  const bloques = d.citas
-    .map(
-      (c, i) =>
-        `${i + 1}) ${c.hora_cita} · ${c.nombre} · ${c.servicios}\n` +
-        `Chat: ${chatLink(c.whatsapp)}\n` +
-        `Mensaje: ${mensajeConfirmacion(c, d.fecha)}`,
-    )
-    .join("\n\n");
-  const texto =
+  const lista = d.citas
+    .map((c) => `• ${c.hora_cita} — ${c.nombre} — WhatsApp: ${c.whatsapp}`)
+    .join("\n");
+  const resumen =
     `🌅 Recordatorio esma\n` +
-    `MAÑANA (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s). Abre el chat de cada clienta y mándale su confirmación (copia el texto):\n\n` +
-    bloques;
-  await enviarWhatsApp(texto);
+    `MAÑANA (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s):\n` +
+    lista +
+    `\n\nEnseguida te mando el mensaje de cada clienta para que lo reenvíes. 👇`;
+  await enviarWhatsApp(resumen);
+
+  // Un mensaje por clienta, con pausa para que CallMeBot no los junte.
+  for (const c of d.citas) {
+    await new Promise((r) => setTimeout(r, DELAY_MENSAJES));
+    await enviarWhatsApp(mensajeConfirmacion(c, d.fecha));
+  }
 }
 
 // Recordatorio de las citas de HOY (mismo día, 8am): solo el resumen.
