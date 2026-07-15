@@ -53,6 +53,9 @@ export default function PanelCliente({
   }
 
   const hoy = hoyStr();
+  // ¿Estamos en el mes de cumpleaños de la clienta?
+  const esMesCumple =
+    !!fechaNacimiento && fechaNacimiento.split("-")[1] === hoy.split("-")[1];
   // Grupo: 0 = próximas activas, 1 = pasadas activas, 2 = canceladas (al fondo).
   const grupo = (r: CitaResumen) =>
     r.estado === "Cancelada" ? 2 : r.fecha_cita >= hoy ? 0 : 1;
@@ -86,6 +89,13 @@ export default function PanelCliente({
             <p className="mt-2 flex items-center gap-2 text-base font-medium text-wine">
               <CakeIcon className="h-5 w-5 shrink-0" />
               Tu cumpleaños: {cumpleTexto(fechaNacimiento)}
+            </p>
+          )}
+          {esMesCumple && (
+            <p className="mt-2 flex items-center gap-2 rounded-lg bg-wine/10 px-3 py-2 text-sm font-semibold text-wine">
+              <CakeIcon className="h-4 w-4 shrink-0" />
+              ¡Feliz cumpleaños! Este mes es tuyo, ven a consentirte con
+              nosotras.
             </p>
           )}
         </div>

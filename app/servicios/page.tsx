@@ -63,7 +63,7 @@ export default function ServiciosPage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-4">
-                    <div className="font-display text-xl font-bold text-wine">
+                    <div className="text-xl font-bold text-wine">
                       ${s.precio}
                     </div>
                     <Link

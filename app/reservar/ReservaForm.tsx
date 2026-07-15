@@ -348,9 +348,7 @@ export default function ReservaForm({
                               <div className="text-xs text-muted">{s.duracion}</div>
                             </div>
                           </div>
-                          <div className="font-display font-bold text-wine">
-                            ${s.precio}
-                          </div>
+                          <div className="font-bold text-wine">${s.precio}</div>
                         </label>
                       );
                     })}

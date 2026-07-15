@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { crearCliente } from "@/app/lib/db";
+import { crearCliente, buscarClientePorTelefono } from "@/app/lib/db";
 import { iniciarSesionCliente } from "@/app/lib/clienteAuth";
 
 export async function POST(request: Request) {
@@ -22,6 +22,19 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { ok: false, error: "Elige tu fecha de nacimiento." },
       { status: 400 },
+    );
+  }
+
+  // El WhatsApp es la identidad de la cuenta: no puede repetirse.
+  const existente = await buscarClientePorTelefono(telefono);
+  if (existente) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          'Este número de WhatsApp ya está registrado. Si ya tienes cuenta, entra con "Ya tengo cuenta". Si no, usa otro número.',
+      },
+      { status: 409 },
     );
   }
 

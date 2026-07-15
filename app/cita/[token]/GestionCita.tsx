@@ -229,7 +229,7 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
             Elige la nueva fecha y hora
           </h2>
           <p className="text-sm text-muted">
-            Solo puedes reagendar hasta con 3 meses de anticipación.
+            Sólo puedes reagendar hasta con 3 meses de anticipación.
           </p>
           <Calendario
             value={nuevaFecha}

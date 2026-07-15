@@ -65,7 +65,7 @@ export default function Footer() {
             </a>
           </p>
           <p className={`mt-2 text-sm ${dark ? "text-white/70" : "text-muted"}`}>
-            Solo con cita en el local.
+            Sólo con cita en el local.
           </p>
         </div>
 

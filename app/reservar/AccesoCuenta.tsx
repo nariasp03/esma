@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import SelectorNacimiento from "./SelectorNacimiento";
 import AlertIcon from "@/app/components/AlertIcon";
+import CakeIcon from "@/app/components/CakeIcon";
 
 export default function AccesoCuenta() {
   const router = useRouter();
@@ -96,8 +97,9 @@ export default function AccesoCuenta() {
           <div>
             <label className="text-sm font-medium">Fecha de nacimiento</label>
             <SelectorNacimiento onChange={setNacimiento} />
-            <p className="mt-1 text-xs text-muted">
-              La usamos para tu descuento de cumpleaños.
+            <p className="mt-2 flex items-center gap-1.5 rounded-lg bg-beige/60 px-3 py-2 text-sm font-medium text-wine">
+              <CakeIcon className="h-4 w-4 shrink-0" />
+              ¡En el mes de tu cumpleaños tienes un descuento especial!
             </p>
           </div>
         )}
