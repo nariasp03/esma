@@ -221,8 +221,7 @@ export default function ReservaForm({
         </div>
 
         <div>
-          <h3 className="text-xl font-bold text-wine">Tu anticipo: ${anticipo}</h3>
-          <p className="mt-1 text-sm text-muted">
+          <p className="text-sm text-muted">
             Aparta tu lugar con el 50% por transferencia.
           </p>
           <div className="mt-3 rounded-xl bg-beige/60 p-4 text-sm">
@@ -236,6 +235,10 @@ export default function ReservaForm({
             </p>
             <p>
               <span className="text-muted">Banco:</span> {pago.banco}
+            </p>
+            <p>
+              <span className="text-muted">Cantidad:</span>{" "}
+              <strong>${anticipo}</strong>
             </p>
             <p>
               <span className="text-muted">Concepto:</span>{" "}
@@ -345,7 +348,10 @@ export default function ReservaForm({
                               <div className="text-sm font-medium text-ink">
                                 {s.nombre}
                               </div>
-                              <div className="text-xs text-muted">{s.duracion}</div>
+                              <div className="flex items-center gap-1 text-xs text-muted">
+                                <ClockIcon className="h-3.5 w-3.5 text-wine" />
+                                {s.duracion}
+                              </div>
                             </div>
                           </div>
                           <div className="font-bold text-wine">${s.precio}</div>

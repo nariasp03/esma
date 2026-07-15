@@ -6,6 +6,7 @@ import GestionCita from "@/app/cita/[token]/GestionCita";
 import { MESES } from "./Calendario";
 import PlusIcon from "@/app/components/PlusIcon";
 import CakeIcon from "@/app/components/CakeIcon";
+import GiftIcon from "@/app/components/GiftIcon";
 import PoliticaCancelacion from "@/app/components/PoliticaCancelacion";
 
 type CitaResumen = {
@@ -93,7 +94,7 @@ export default function PanelCliente({
           )}
           {esMesCumple && (
             <p className="mt-2 flex items-center gap-2 rounded-lg bg-wine/10 px-3 py-2 text-sm font-semibold text-wine">
-              <CakeIcon className="h-4 w-4 shrink-0" />
+              <GiftIcon className="h-4 w-4 shrink-0" />
               ¡Feliz cumpleaños! Este mes es tuyo, ven a consentirte con
               nosotras.
             </p>
