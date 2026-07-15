@@ -35,15 +35,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: "No autorizado." }, { status: 401 });
   }
 
+  // Mandamos en segundo plano y respondemos rápido, para que el cron
+  // (cron-job.org) no marque falso fallo por tardanza. Los mensajes van
+  // saliendo espaciados aunque ya hayamos respondido.
   if (tipo === "hoy") {
-    return NextResponse.json({ ok: true, tipo, citas: await mandarHoy() });
+    void mandarHoy();
+    return NextResponse.json({ ok: true, tipo: "hoy" });
   }
   if (tipo === "manana") {
-    return NextResponse.json({ ok: true, tipo, citas: await mandarManana() });
+    void mandarManana();
+    return NextResponse.json({ ok: true, tipo: "manana" });
   }
 
   // Sin tipo: ambos recordatorios (lo que hace el cron de las 8am).
-  const hoy = await mandarHoy();
-  const manana = await mandarManana();
-  return NextResponse.json({ ok: true, tipo: "ambos", hoy, manana });
+  void (async () => {
+    await mandarHoy();
+    await mandarManana();
+  })();
+  return NextResponse.json({ ok: true, tipo: "ambos" });
 }
