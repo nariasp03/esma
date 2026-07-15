@@ -105,6 +105,11 @@ export default function ReservaForm({
     };
   }, [fecha, totalMin]);
 
+  // Al cambiar de paso (o mostrar la pantalla de éxito), subir al inicio.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [paso, enviado]);
+
   function toggleServicio(nombre: string) {
     setHora("");
     setSeleccion((prev) =>
