@@ -19,18 +19,16 @@ const colorEstado: Record<string, string> = {
 };
 
 const FILTROS = [
-  "Citas de hoy",
+  "Próximas citas",
   "Solicitudes",
   "Reagendadas",
-  "Aprobada",
-  "Completada",
-  "Cancelada",
-  "Todas",
+  "Completadas",
+  "Canceladas",
 ] as const;
 type Filtro = (typeof FILTROS)[number];
 
 // Categorías que requieren que el admin las revise (se marcan en rojo).
-const ATENCION: Filtro[] = ["Solicitudes", "Reagendadas", "Cancelada"];
+const ATENCION: Filtro[] = ["Solicitudes", "Reagendadas", "Canceladas"];
 
 function hoyStr(): string {
   const d = new Date();
@@ -51,7 +49,7 @@ export default function AdminPanel({
 }) {
   const router = useRouter();
   const [reservas, setReservas] = useState(reservasIniciales);
-  const [filtro, setFiltro] = useState<Filtro>("Solicitudes");
+  const [filtro, setFiltro] = useState<Filtro>("Próximas citas");
   const [busqueda, setBusqueda] = useState("");
   const [comprobanteId, setComprobanteId] = useState<number | null>(null);
   const [reagendarId, setReagendarId] = useState<number | null>(null);
@@ -65,32 +63,32 @@ export default function AdminPanel({
   }, [reservas]);
 
   function contar(f: Filtro): number {
-    if (f === "Todas") return reservas.length;
-    if (f === "Citas de hoy")
+    if (f === "Próximas citas")
       return reservas.filter(
-        (r) => r.fecha_cita === hoy && r.estado !== "Cancelada",
+        (r) => r.fecha_cita >= hoy && r.estado !== "Cancelada",
       ).length;
     if (f === "Solicitudes") return conteos["Pendiente"] ?? 0;
     if (f === "Reagendadas") return reservas.filter((r) => r.reagendada).length;
-    if (f === "Cancelada")
+    if (f === "Completadas") return conteos["Completada"] ?? 0;
+    if (f === "Canceladas")
       return reservas.filter(
         (r) => r.estado === "Cancelada" && r.cancelacion_nueva,
       ).length;
-    return conteos[f] ?? 0;
+    return 0;
   }
 
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
     return reservas
       .filter((r) => {
-        if (filtro === "Todas") return true;
-        if (filtro === "Citas de hoy")
-          return r.fecha_cita === hoy && r.estado !== "Cancelada";
+        if (filtro === "Próximas citas")
+          return r.fecha_cita >= hoy && r.estado !== "Cancelada";
         if (filtro === "Solicitudes") return r.estado === "Pendiente";
         if (filtro === "Reagendadas") return r.reagendada;
-        if (filtro === "Cancelada")
+        if (filtro === "Completadas") return r.estado === "Completada";
+        if (filtro === "Canceladas")
           return r.estado === "Cancelada" && r.cancelacion_nueva;
-        return r.estado === filtro;
+        return false;
       })
       .filter((r) => (q ? r.nombre.toLowerCase().includes(q) : true))
       .sort((a, b) => {
@@ -115,6 +113,21 @@ export default function AdminPanel({
       prev.map((r) => (r.id === id ? { ...r, ...cambios } : r)),
     );
   }
+
+  const renderCard = (r: ReservaAdmin) => (
+    <CitaCard
+      key={r.id}
+      r={r}
+      hoy={hoy}
+      onActualizar={actualizarLocal}
+      onVerComprobante={() => setComprobanteId(r.id)}
+      onReagendar={() => setReagendarId(r.id)}
+    />
+  );
+
+  // Para "Próximas citas": separar las de hoy de las de más adelante.
+  const proximasHoy = visibles.filter((r) => r.fecha_cita === hoy);
+  const proximasDespues = visibles.filter((r) => r.fecha_cita > hoy);
 
   async function salir() {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -206,24 +219,36 @@ export default function AdminPanel({
       />
 
       {/* Lista */}
-      <div className="mt-6 space-y-4">
-        {visibles.length === 0 ? (
-          <p className="rounded-2xl border border-line bg-beige/40 p-6 text-center text-sm text-muted">
-            No hay citas para mostrar.
-          </p>
-        ) : (
-          visibles.map((r) => (
-            <CitaCard
-              key={r.id}
-              r={r}
-              hoy={hoy}
-              onActualizar={actualizarLocal}
-              onVerComprobante={() => setComprobanteId(r.id)}
-              onReagendar={() => setReagendarId(r.id)}
-            />
-          ))
-        )}
-      </div>
+      {visibles.length === 0 ? (
+        <p className="mt-6 rounded-2xl border border-line bg-beige/40 p-6 text-center text-sm text-muted">
+          No hay citas para mostrar.
+        </p>
+      ) : filtro === "Próximas citas" ? (
+        <div className="mt-6 space-y-8">
+          {proximasHoy.length > 0 && (
+            <div>
+              <h2 className="font-display text-lg font-bold text-wine">
+                Citas de hoy
+              </h2>
+              <div className="mt-3 space-y-4">
+                {proximasHoy.map((r) => renderCard(r))}
+              </div>
+            </div>
+          )}
+          {proximasDespues.length > 0 && (
+            <div>
+              <h2 className="font-display text-lg font-bold text-ink">
+                Más adelante
+              </h2>
+              <div className="mt-3 space-y-4">
+                {proximasDespues.map((r) => renderCard(r))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="mt-6 space-y-4">{visibles.map((r) => renderCard(r))}</div>
+      )}
 
       {comprobanteId !== null && (
         <ComprobanteModal

@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import GestionCita from "@/app/cita/[token]/GestionCita";
 import { MESES } from "./Calendario";
-import { politicaCancelacion } from "@/app/lib/servicios";
 import PlusIcon from "@/app/components/PlusIcon";
+import CakeIcon from "@/app/components/CakeIcon";
+import PoliticaCancelacion from "@/app/components/PoliticaCancelacion";
 
 type CitaResumen = {
   token: string;
@@ -82,7 +83,8 @@ export default function PanelCliente({
             Hola, {nombre.split(" ")[0]}
           </h1>
           {fechaNacimiento && (
-            <p className="mt-1 text-sm text-muted">
+            <p className="mt-2 flex items-center gap-2 text-base font-medium text-wine">
+              <CakeIcon className="h-5 w-5 shrink-0" />
               Tu cumpleaños: {cumpleTexto(fechaNacimiento)}
             </p>
           )}
@@ -138,9 +140,7 @@ export default function PanelCliente({
         </>
       )}
 
-      <p className="mt-8 rounded-xl border border-line bg-white p-4 text-xs text-muted">
-        {politicaCancelacion}
-      </p>
+      <PoliticaCancelacion className="mt-8" />
     </div>
   );
 }

@@ -14,7 +14,7 @@ export const HORARIOS: Record<number, { inicio: string; fin: string } | null> = 
 export const BUFFER_MIN = 15; // descanso entre citas
 export const MIN_DIAS = 1; // se puede reservar para el día siguiente
 export const CORTE_HORA = 18; // hasta las 6pm se agenda para mañana; después, pasado mañana
-export const MAX_DIAS = 30; // hasta 1 mes antes
+export const MAX_DIAS = 90; // hasta 3 meses antes
 export const PASO_MIN = 30; // se ofrecen horarios cada 30 min
 
 const DIAS = [

@@ -2,13 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  servicios,
-  categorias,
-  pago,
-  politicaCancelacion,
-  DESCUENTO_CUMPLE,
-} from "@/app/lib/servicios";
+import { servicios, categorias, pago, DESCUENTO_CUMPLE } from "@/app/lib/servicios";
+import PoliticaCancelacion from "@/app/components/PoliticaCancelacion";
 import {
   estaAbierto,
   nombreDia,
@@ -217,21 +212,16 @@ export default function ReservaForm({
               Descuento de cumpleaños ({DESCUENTO_CUMPLE}%): -${descuento}
             </div>
           )}
-          <div className="mt-2 font-display text-lg font-bold text-wine">
-            Anticipo: <span className="font-sans">$</span>
-            {anticipo}{" "}
+          <div className="mt-2 text-lg font-bold text-wine">
+            Anticipo: ${anticipo}{" "}
             <span className="text-sm font-normal text-muted">
-              (de <span className="font-sans">$</span>
-              {totalFinal} total)
+              (de ${totalFinal} total)
             </span>
           </div>
         </div>
 
         <div>
-          <h3 className="font-display text-lg font-bold text-wine">
-            Tu anticipo: <span className="font-sans">$</span>
-            {anticipo}
-          </h3>
+          <h3 className="text-xl font-bold text-wine">Tu anticipo: ${anticipo}</h3>
           <p className="mt-1 text-sm text-muted">
             Aparta tu lugar con el 50% por transferencia.
           </p>
@@ -271,9 +261,7 @@ export default function ReservaForm({
           </div>
         </div>
 
-        <p className="rounded-xl border border-line bg-white p-4 text-xs text-muted">
-          {politicaCancelacion}
-        </p>
+        <PoliticaCancelacion />
 
         {error && (
           <p className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger">
@@ -380,7 +368,7 @@ export default function ReservaForm({
             2. Elige el día
           </h2>
           <p className="mt-1 text-sm text-muted">
-            Puedes reservar desde 24 horas y hasta 1 mes adelante. Cerrado los
+            Puedes reservar desde 24 horas y hasta 3 meses adelante. Cerrado los
             domingos.
           </p>
           <div className="mt-3">
@@ -457,12 +445,9 @@ export default function ReservaForm({
                 <span>-${descuento}</span>
               </div>
             )}
-            <div className="flex justify-between font-display text-lg font-bold text-wine">
+            <div className="flex justify-between text-lg font-bold text-wine">
               <span>Anticipo (50%)</span>
-              <span>
-                <span className="font-sans">$</span>
-                {anticipo}
-              </span>
+              <span>${anticipo}</span>
             </div>
           </div>
           {fecha && abierto && hora && (

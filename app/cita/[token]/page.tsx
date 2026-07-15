@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getReservaPorToken } from "@/app/lib/db";
-import { politicaCancelacion } from "@/app/lib/servicios";
 import GestionCita from "./GestionCita";
 import SearchIcon from "@/app/components/SearchIcon";
+import PoliticaCancelacion from "@/app/components/PoliticaCancelacion";
 
 export const metadata: Metadata = {
   title: "Tu cita · esma",
@@ -56,9 +56,7 @@ export default async function CitaPage({
           tiene_comprobante: !!reserva.comprobante,
         }}
       />
-      <p className="mt-8 rounded-xl border border-line bg-white p-4 text-xs text-muted">
-        {politicaCancelacion}
-      </p>
+      <PoliticaCancelacion className="mt-8" />
     </div>
   );
 }
