@@ -3,7 +3,6 @@ import { esAdmin } from "@/app/lib/adminAuth";
 import {
   getReservaPorId,
   actualizarEstadoReserva,
-  registrarEfectivo,
   reagendarReservaPorId,
   marcarReagendaVista,
   marcarCancelacionVista,
@@ -12,8 +11,7 @@ import {
 import { slotsDisponibles, estaAbierto } from "@/app/lib/disponibilidad";
 
 // PATCH /api/admin/reserva/[id]
-// Acciones: aprobar | rechazar | efectivo | completar | cancelar | reagendar
-//           | enterada
+// Acciones: aprobar | rechazar | completar | cancelar | reagendar | enterada
 export async function PATCH(
   request: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -47,11 +45,6 @@ export async function PATCH(
     // Rechazar el comprobante: vuelve a Pendiente para que la clienta reintente.
     await actualizarEstadoReserva(id, "Pendiente");
     return NextResponse.json({ ok: true, estado: "Pendiente" });
-  }
-
-  if (accion === "efectivo") {
-    await registrarEfectivo(id);
-    return NextResponse.json({ ok: true, estado: "Aprobada", metodo_pago: "efectivo" });
   }
 
   if (accion === "completar") {

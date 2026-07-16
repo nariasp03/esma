@@ -358,8 +358,7 @@ function CitaCard({
       </div>
 
       <div className="mt-2 text-sm text-muted">
-        Total: ${r.total} · Anticipo: ${r.anticipo} ·{" "}
-        {r.metodo_pago === "efectivo" ? "Efectivo" : "Transferencia"}
+        Total: ${r.total} · Anticipo: ${r.anticipo}
       </div>
 
       {error && (
@@ -397,27 +396,13 @@ function CitaCard({
         )}
 
         {r.estado === "Pendiente" && (
-          <>
-            <button
-              disabled={procesando}
-              onClick={() => accion({ accion: "aprobar" }, { estado: "Aprobada" })}
-              className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
-            >
-              Aprobar
-            </button>
-            <button
-              disabled={procesando}
-              onClick={() =>
-                accion(
-                  { accion: "efectivo" },
-                  { estado: "Aprobada", metodo_pago: "efectivo" },
-                )
-              }
-              className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-beige disabled:opacity-50"
-            >
-              Registrar efectivo
-            </button>
-          </>
+          <button
+            disabled={procesando}
+            onClick={() => accion({ accion: "aprobar" }, { estado: "Aprobada" })}
+            className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+          >
+            Aprobar
+          </button>
         )}
 
         {r.estado === "Aprobada" && (

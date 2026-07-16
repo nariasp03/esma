@@ -446,17 +446,6 @@ export async function marcarCancelacionVista(id: number): Promise<boolean> {
   return (r.rowCount ?? 0) > 0;
 }
 
-// La clienta de confianza paga el anticipo en efectivo: lo registra el admin.
-// Deja el método en "efectivo" y confirma la cita.
-export async function registrarEfectivo(id: number): Promise<boolean> {
-  await ensureTable();
-  const r = await pool.query(
-    "UPDATE reservas SET metodo_pago = 'efectivo', estado = 'Aprobada' WHERE id = $1 RETURNING id",
-    [id],
-  );
-  return (r.rowCount ?? 0) > 0;
-}
-
 export async function reagendarReservaPorId(
   id: number,
   fecha: string,
