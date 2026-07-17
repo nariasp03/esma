@@ -214,12 +214,24 @@ export default function AdminPanel({
       </div>
 
       {/* Búsqueda */}
-      <input
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        placeholder="Buscar por nombre…"
-        className="mt-4 w-full rounded-xl border border-line px-4 py-3 text-ink outline-none focus:border-wine"
-      />
+      <div className="relative mt-4">
+        <input
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Buscar por nombre…"
+          className="w-full rounded-xl border border-line px-4 py-3 pr-11 text-ink outline-none focus:border-wine"
+        />
+        {busqueda && (
+          <button
+            type="button"
+            onClick={() => setBusqueda("")}
+            aria-label="Borrar búsqueda"
+            className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-muted hover:bg-beige hover:text-ink"
+          >
+            <CloseIcon className="h-4 w-4" />
+          </button>
+        )}
+      </div>
 
       {/* Lista */}
       {visibles.length === 0 ? (
