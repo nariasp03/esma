@@ -9,6 +9,7 @@ import ClockIcon from "@/app/components/ClockIcon";
 import AlertIcon from "@/app/components/AlertIcon";
 import CloseIcon from "@/app/components/CloseIcon";
 import CheckIcon from "@/app/components/CheckIcon";
+import ClienteModal from "./ClienteModal";
 import { nombreDia, rangoFechas, formatearFecha } from "@/app/lib/disponibilidad";
 
 const colorEstado: Record<string, string> = {
@@ -53,6 +54,7 @@ export default function AdminPanel({
   const [busqueda, setBusqueda] = useState("");
   const [comprobanteId, setComprobanteId] = useState<number | null>(null);
   const [reagendarId, setReagendarId] = useState<number | null>(null);
+  const [clienteId, setClienteId] = useState<number | null>(null);
 
   const hoy = hoyStr();
 
@@ -122,6 +124,7 @@ export default function AdminPanel({
       onActualizar={actualizarLocal}
       onVerComprobante={() => setComprobanteId(r.id)}
       onReagendar={() => setReagendarId(r.id)}
+      onVerCliente={r.cliente_id ? () => setClienteId(r.cliente_id) : undefined}
     />
   );
 
@@ -267,6 +270,14 @@ export default function AdminPanel({
           }}
         />
       )}
+
+      {clienteId !== null && (
+        <ClienteModal
+          clienteId={clienteId}
+          onClose={() => setClienteId(null)}
+          onCitaCreada={() => router.refresh()}
+        />
+      )}
     </div>
   );
 }
@@ -277,12 +288,14 @@ function CitaCard({
   onActualizar,
   onVerComprobante,
   onReagendar,
+  onVerCliente,
 }: {
   r: ReservaAdmin;
   hoy: string;
   onActualizar: (id: number, cambios: Partial<ReservaAdmin>) => void;
   onVerComprobante: () => void;
   onReagendar: () => void;
+  onVerCliente?: () => void;
 }) {
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState("");
@@ -314,7 +327,18 @@ function CitaCard({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-display text-lg font-bold text-ink">{r.nombre}</span>
+            {onVerCliente ? (
+              <button
+                onClick={onVerCliente}
+                className="font-display text-lg font-bold text-ink underline decoration-wine/40 underline-offset-2 hover:text-wine"
+              >
+                {r.nombre}
+              </button>
+            ) : (
+              <span className="font-display text-lg font-bold text-ink">
+                {r.nombre}
+              </span>
+            )}
             {r.primera_vez && (
               <span className="rounded-full bg-beige px-2 py-0.5 text-xs font-medium text-wine">
                 1ª vez
@@ -326,14 +350,26 @@ function CitaCard({
               </span>
             )}
           </div>
-          <a
-            href={waLink(r.whatsapp)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-wine hover:underline"
-          >
-            WhatsApp: {r.whatsapp}
-          </a>
+          {onVerCliente ? (
+            <button
+              onClick={onVerCliente}
+              className="text-sm text-wine hover:underline"
+            >
+              WhatsApp: {r.whatsapp}
+            </button>
+          ) : (
+            <a
+              href={waLink(r.whatsapp)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-wine hover:underline"
+            >
+              WhatsApp: {r.whatsapp}
+            </a>
+          )}
+          {onVerCliente && (
+            <p className="text-xs text-muted">Toca el nombre para ver su perfil</p>
+          )}
         </div>
         <span
           className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
