@@ -62,6 +62,7 @@ export default function ReservaForm({
 
   const [paso, setPaso] = useState<1 | 2>(1);
   const [comprobante, setComprobante] = useState<File | null>(null);
+  const [nota, setNota] = useState("");
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
@@ -148,6 +149,7 @@ export default function ReservaForm({
           hora_cita: hora,
           duracion_min: totalMin,
           comprobante: comprobanteData,
+          nota,
         }),
       });
       const data = await r.json().catch(() => ({}));
@@ -471,6 +473,21 @@ export default function ReservaForm({
               </span>
             </div>
           )}
+
+          <div className="mt-4">
+            <label className="text-sm font-medium text-ink">
+              Nota o comentario{" "}
+              <span className="font-normal text-muted">(opcional)</span>
+            </label>
+            <textarea
+              value={nota}
+              onChange={(e) => setNota(e.target.value)}
+              rows={2}
+              maxLength={300}
+              placeholder="Ej. Se me rompió una uña y solo quiero retoque de esa."
+              className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-wine"
+            />
+          </div>
 
           <button
             type="button"

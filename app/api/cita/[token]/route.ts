@@ -33,13 +33,15 @@ export async function PATCH(
   const accion = body.accion;
 
   if (accion === "cancelar") {
-    await cancelarReserva(token);
+    const motivo = typeof body.motivo === "string" ? body.motivo.trim() : "";
+    await cancelarReserva(token, motivo || null);
     // Avisamos al admin por WhatsApp (si CallMeBot está configurado).
     await avisarCancelacion({
       nombre: reserva.nombre,
       servicios: reserva.servicios,
       fecha: reserva.fecha_cita,
       hora: reserva.hora_cita,
+      motivo: motivo || null,
     });
     return NextResponse.json({ ok: true });
   }
@@ -63,7 +65,8 @@ export async function PATCH(
         { status: 409 },
       );
     }
-    await reagendarReserva(token, fecha, hora);
+    const nota = typeof body.nota === "string" ? body.nota.trim() : "";
+    await reagendarReserva(token, fecha, hora, nota || null);
     // Avisamos al administrador por WhatsApp (si CallMeBot está configurado).
     // La clienta no ve nada de esto.
     await avisarReagenda({
@@ -73,6 +76,7 @@ export async function PATCH(
       horaAnterior: reserva.hora_cita,
       fechaNueva: fecha,
       horaNueva: hora,
+      nota: nota || null,
     });
     return NextResponse.json({ ok: true });
   }

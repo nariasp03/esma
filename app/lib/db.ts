@@ -111,6 +111,14 @@ async function ensureTable() {
   await pool.query(
     `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS cancelacion_nueva BOOLEAN NOT NULL DEFAULT false;`,
   );
+  // Notas opcionales que deja la clienta al reservar, cancelar o reagendar.
+  await pool.query(`ALTER TABLE reservas ADD COLUMN IF NOT EXISTS nota TEXT;`);
+  await pool.query(
+    `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS motivo_cancelacion TEXT;`,
+  );
+  await pool.query(
+    `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS nota_reagenda TEXT;`,
+  );
   tablaLista = true;
 }
 
@@ -193,17 +201,26 @@ export async function getClientePorId(id: number): Promise<Cliente | null> {
   return r.rows[0] ?? null;
 }
 
+export type ReservaConNotas = Reserva & {
+  tiene_comprobante: boolean;
+  reagendada: boolean;
+  nota: string | null;
+  motivo_cancelacion: string | null;
+  nota_reagenda: string | null;
+};
+
 export async function reservasPorCliente(
   clienteId: number,
-): Promise<(Reserva & { tiene_comprobante: boolean })[]> {
+): Promise<ReservaConNotas[]> {
   await ensureTable();
-  const r = await pool.query<Reserva & { tiene_comprobante: boolean }>(
+  const r = await pool.query<ReservaConNotas>(
     `SELECT id, creado_en, nombre, whatsapp, primera_vez,
             to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
             servicios, total, anticipo,
             to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
             hora_cita, duracion_min, NULL AS comprobante, metodo_pago, estado,
-            confirmada_clienta, token,
+            confirmada_clienta, token, reagendada,
+            nota, motivo_cancelacion, nota_reagenda,
             (comprobante IS NOT NULL AND comprobante <> '') AS tiene_comprobante
      FROM reservas WHERE cliente_id = $1
      ORDER BY fecha_cita DESC, hora_cita DESC`,
@@ -226,6 +243,8 @@ export type NuevaReserva = {
   comprobante: string | null;
   metodo_pago: string;
   cliente_id: number | null;
+  nota?: string | null;
+  estado?: string;
 };
 
 export async function insertarReserva(
@@ -237,8 +256,9 @@ export async function insertarReserva(
     `INSERT INTO reservas
        (nombre, whatsapp, primera_vez, fecha_nacimiento, servicios, total,
         anticipo, fecha_cita, hora_cita, duracion_min, comprobante, metodo_pago,
-        token, cliente_id)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+        token, cliente_id, nota, estado)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
+             COALESCE($16, 'Pendiente'))
      RETURNING id`,
     [
       r.nombre,
@@ -255,6 +275,8 @@ export async function insertarReserva(
       r.metodo_pago,
       token,
       r.cliente_id,
+      r.nota ?? null,
+      r.estado ?? null,
     ],
   );
   return { id: res.rows[0].id as number, token };
@@ -315,13 +337,18 @@ export async function reservasPorNombre(nombre: string): Promise<Reserva[]> {
   return r.rows;
 }
 
-export async function cancelarReserva(token: string): Promise<boolean> {
+export async function cancelarReserva(
+  token: string,
+  motivo?: string | null,
+): Promise<boolean> {
   await ensureTable();
   // La cancela la clienta: la marcamos como cancelación nueva para que el admin
   // la revise en la pestaña "Canceladas".
   const r = await pool.query(
-    "UPDATE reservas SET estado = 'Cancelada', cancelacion_nueva = true WHERE token = $1 RETURNING id",
-    [token],
+    `UPDATE reservas SET estado = 'Cancelada', cancelacion_nueva = true,
+            motivo_cancelacion = $2
+     WHERE token = $1 RETURNING id`,
+    [token, motivo || null],
   );
   return (r.rowCount ?? 0) > 0;
 }
@@ -330,12 +357,14 @@ export async function reagendarReserva(
   token: string,
   fecha: string,
   hora: string,
+  nota?: string | null,
 ): Promise<boolean> {
   await ensureTable();
   const r = await pool.query(
-    `UPDATE reservas SET fecha_cita = $1, hora_cita = $2, reagendada = true
+    `UPDATE reservas SET fecha_cita = $1, hora_cita = $2, reagendada = true,
+            nota_reagenda = $4
      WHERE token = $3 AND estado <> 'Cancelada' RETURNING id`,
-    [fecha, hora, token],
+    [fecha, hora, token, nota || null],
   );
   return (r.rowCount ?? 0) > 0;
 }
@@ -372,6 +401,10 @@ export type ReservaAdmin = Omit<Reserva, "comprobante"> & {
   tiene_comprobante: boolean;
   reagendada: boolean;
   cancelacion_nueva: boolean;
+  cliente_id: number | null;
+  nota: string | null;
+  motivo_cancelacion: string | null;
+  nota_reagenda: string | null;
 };
 
 export async function listarReservasAdmin(): Promise<ReservaAdmin[]> {
@@ -383,6 +416,7 @@ export async function listarReservasAdmin(): Promise<ReservaAdmin[]> {
             to_char(fecha_cita, 'YYYY-MM-DD') AS fecha_cita,
             hora_cita, duracion_min, metodo_pago, estado,
             confirmada_clienta, token, reagendada, cancelacion_nueva,
+            cliente_id, nota, motivo_cancelacion, nota_reagenda,
             (comprobante IS NOT NULL AND comprobante <> '') AS tiene_comprobante
      FROM reservas
      ORDER BY fecha_cita DESC, hora_cita DESC`,

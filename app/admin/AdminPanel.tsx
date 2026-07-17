@@ -361,6 +361,26 @@ function CitaCard({
         Total: ${r.total} · Anticipo: ${r.anticipo}
       </div>
 
+      {r.nota && (
+        <p className="mt-2 rounded-lg bg-beige/60 px-3 py-2 text-sm text-ink">
+          <span className="font-semibold text-wine">Nota:</span> {r.nota}
+        </p>
+      )}
+      {r.nota_reagenda && (
+        <p className="mt-2 rounded-lg bg-beige/60 px-3 py-2 text-sm text-ink">
+          <span className="font-semibold text-wine">Nota de reagenda:</span>{" "}
+          {r.nota_reagenda}
+        </p>
+      )}
+      {r.motivo_cancelacion && (
+        <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-ink">
+          <span className="font-semibold text-red-700">
+            Motivo de cancelación:
+          </span>{" "}
+          {r.motivo_cancelacion}
+        </p>
+      )}
+
       {error && (
         <p className="mt-3 flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">
           <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />

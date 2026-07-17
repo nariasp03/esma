@@ -58,6 +58,7 @@ export async function POST(request: Request) {
       comprobante: typeof b.comprobante === "string" ? b.comprobante : null,
       metodo_pago: "transferencia",
       cliente_id: typeof b.cliente_id === "number" ? b.cliente_id : null,
+      nota: s(b.nota) || null,
     });
 
     // Avisamos al administrador por WhatsApp (si CallMeBot está configurado).
@@ -68,6 +69,7 @@ export async function POST(request: Request) {
       fecha_cita,
       hora_cita,
       anticipo: Number(b.anticipo) || 0,
+      nota: s(b.nota) || null,
     });
 
     return NextResponse.json({ ok: true, id, token });

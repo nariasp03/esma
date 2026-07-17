@@ -34,6 +34,7 @@ type DatosAviso = {
   fecha_cita: string;
   hora_cita: string;
   anticipo: number;
+  nota?: string | null;
 };
 
 // Aviso de una reserva nueva.
@@ -46,6 +47,7 @@ export async function avisarNuevaReserva(d: DatosAviso): Promise<void> {
     `Día: ${nombreDia(d.fecha_cita)} ${formatearFecha(d.fecha_cita)}\n` +
     `Hora: ${d.hora_cita}\n` +
     `Anticipo: $${d.anticipo}\n` +
+    (d.nota ? `Nota: ${d.nota}\n` : ``) +
     `Revisa el panel para confirmar el pago.`;
   await enviarWhatsApp(texto);
 }
@@ -57,6 +59,7 @@ type DatosReagenda = {
   horaAnterior: string;
   fechaNueva: string;
   horaNueva: string;
+  nota?: string | null;
 };
 
 // Aviso de que una clienta reagendó su cita.
@@ -66,7 +69,8 @@ export async function avisarReagenda(d: DatosReagenda): Promise<void> {
     `La clienta ${d.nombre} cambió la fecha de su cita.\n` +
     `Servicio(s): ${d.servicios}\n` +
     `Antes: ${nombreDia(d.fechaAnterior)} ${formatearFecha(d.fechaAnterior)} ${d.horaAnterior}\n` +
-    `Ahora: ${nombreDia(d.fechaNueva)} ${formatearFecha(d.fechaNueva)} ${d.horaNueva}`;
+    `Ahora: ${nombreDia(d.fechaNueva)} ${formatearFecha(d.fechaNueva)} ${d.horaNueva}` +
+    (d.nota ? `\nNota: ${d.nota}` : ``);
   await enviarWhatsApp(texto);
 }
 
@@ -76,12 +80,14 @@ export async function avisarCancelacion(d: {
   servicios: string;
   fecha: string;
   hora: string;
+  motivo?: string | null;
 }): Promise<void> {
   const texto =
     `❌ Cancelación en esma\n` +
     `La clienta ${d.nombre} canceló su cita.\n` +
     `Servicio(s): ${d.servicios}\n` +
-    `Era: ${nombreDia(d.fecha)} ${formatearFecha(d.fecha)} ${d.hora}`;
+    `Era: ${nombreDia(d.fecha)} ${formatearFecha(d.fecha)} ${d.hora}` +
+    (d.motivo ? `\nMotivo: ${d.motivo}` : ``);
   await enviarWhatsApp(texto);
 }
 

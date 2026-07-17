@@ -6,6 +6,7 @@ import CalendarIcon from "@/app/components/CalendarIcon";
 import ClockIcon from "@/app/components/ClockIcon";
 import AlertIcon from "@/app/components/AlertIcon";
 import CloseIcon from "@/app/components/CloseIcon";
+import PoliticaCancelacion from "@/app/components/PoliticaCancelacion";
 import { nombreDia, rangoFechas, formatearFecha } from "@/app/lib/disponibilidad";
 
 type Datos = {
@@ -32,10 +33,12 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
   const [estado, setEstado] = useState(reserva.estado);
   const [fecha, setFecha] = useState(reserva.fecha_cita);
   const [hora, setHora] = useState(reserva.hora_cita);
-  const [modo, setModo] = useState<"ver" | "reagendar">("ver");
+  const [modo, setModo] = useState<"ver" | "reagendar" | "cancelar">("ver");
 
   const [nuevaFecha, setNuevaFecha] = useState("");
   const [nuevaHora, setNuevaHora] = useState("");
+  const [notaReagenda, setNotaReagenda] = useState("");
+  const [motivo, setMotivo] = useState("");
   const [slots, setSlots] = useState<string[]>([]);
   const [cargandoSlots, setCargandoSlots] = useState(false);
 
@@ -115,9 +118,9 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
   }
 
   async function cancelar() {
-    if (!confirm("¿Segura que quieres cancelar tu cita?")) return;
-    if (await accion({ accion: "cancelar" })) {
+    if (await accion({ accion: "cancelar", motivo })) {
       setEstado("Cancelada");
+      setModo("ver");
       // ¿Se canceló con al menos 24 horas de anticipación?
       const cita = new Date(`${fecha}T${hora}:00`);
       const horasFaltan = (cita.getTime() - Date.now()) / (1000 * 60 * 60);
@@ -138,12 +141,20 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
       setError("Elige la nueva fecha y hora.");
       return;
     }
-    if (await accion({ accion: "reagendar", fecha: nuevaFecha, hora: nuevaHora })) {
+    if (
+      await accion({
+        accion: "reagendar",
+        fecha: nuevaFecha,
+        hora: nuevaHora,
+        nota: notaReagenda,
+      })
+    ) {
       setFecha(nuevaFecha);
       setHora(nuevaHora);
       setModo("ver");
       setNuevaFecha("");
       setNuevaHora("");
+      setNotaReagenda("");
       setMensaje("¡Tu cita fue reagendada!");
     }
   }
@@ -217,11 +228,52 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
           <button
             type="button"
             disabled={procesando}
-            onClick={cancelar}
+            onClick={() => setModo("cancelar")}
             className="flex-1 rounded-full border border-line px-6 py-3 font-semibold text-ink transition-colors hover:bg-beige disabled:opacity-60"
           >
             Cancelar cita
           </button>
+        </div>
+      ) : modo === "cancelar" ? (
+        <div className="space-y-4">
+          <h2 className="font-display text-xl font-bold text-wine">
+            Cancelar cita
+          </h2>
+          <div>
+            <label className="text-sm font-medium text-ink">
+              Motivo <span className="font-normal text-muted">(opcional)</span>
+            </label>
+            <textarea
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              rows={2}
+              maxLength={300}
+              placeholder="Cuéntanos por qué cancelas (opcional)."
+              className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-wine"
+            />
+          </div>
+          <PoliticaCancelacion />
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              disabled={procesando}
+              onClick={cancelar}
+              className="flex-1 rounded-full border border-danger/40 px-6 py-3 font-semibold text-danger transition-colors hover:bg-danger hover:text-white disabled:opacity-60"
+            >
+              {procesando ? "Cancelando..." : "Sí, cancelar mi cita"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModo("ver");
+                setMotivo("");
+                setError("");
+              }}
+              className="rounded-full border border-line px-6 py-3 font-semibold text-ink transition-colors hover:bg-beige"
+            >
+              Volver
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
@@ -270,6 +322,20 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
             </div>
           )}
 
+          <div>
+            <label className="text-sm font-medium text-ink">
+              Nota <span className="font-normal text-muted">(opcional)</span>
+            </label>
+            <textarea
+              value={notaReagenda}
+              onChange={(e) => setNotaReagenda(e.target.value)}
+              rows={2}
+              maxLength={300}
+              placeholder="¿Algo que quieras avisarnos? (opcional)"
+              className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-wine"
+            />
+          </div>
+
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
@@ -285,6 +351,7 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
                 setModo("ver");
                 setNuevaFecha("");
                 setNuevaHora("");
+                setNotaReagenda("");
                 setError("");
               }}
               className="rounded-full border border-line px-6 py-3 font-semibold text-ink transition-colors hover:bg-beige"
