@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { negocio } from "@/app/lib/servicios";
 import InstagramIcon from "./InstagramIcon";
+import WhatsAppIcon from "./WhatsAppIcon";
 
 export default function Footer() {
   const pathname = usePathname();
@@ -53,17 +54,6 @@ export default function Footer() {
           >
             Ver en el mapa →
           </a>
-          <p className={`mt-2 text-sm ${dark ? "text-white/80" : "text-ink"}`}>
-            Tel:{" "}
-            <a
-              href={`tel:${negocio.telefono}`}
-              className={`font-medium hover:underline ${
-                dark ? "text-beige-dark hover:text-white" : "text-wine"
-              }`}
-            >
-              {negocio.telefonoTexto}
-            </a>
-          </p>
           <p className={`mt-2 text-sm ${dark ? "text-white/70" : "text-muted"}`}>
             Sólo con cita en el local.
           </p>
@@ -75,21 +65,46 @@ export default function Footer() {
               dark ? "text-beige-dark" : "text-wine"
             }`}
           >
-            Síguenos
+            Contáctanos
           </h3>
-          <a
-            href={negocio.instagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`mt-3 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              dark
-                ? "bg-white/10 text-white hover:bg-white/20"
-                : "border border-wine/30 text-wine hover:bg-wine hover:text-white"
-            }`}
-          >
-            <InstagramIcon className="h-5 w-5" />
-            {negocio.instagramUser}
-          </a>
+          <div className="mt-3 flex flex-col items-start gap-2">
+            <a
+              href={`tel:${negocio.telefono}`}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                dark
+                  ? "bg-white/10 text-white hover:bg-white/20"
+                  : "border border-wine/30 text-wine hover:bg-wine hover:text-white"
+              }`}
+            >
+              {negocio.telefonoTexto}
+            </a>
+            <a
+              href={`https://wa.me/${negocio.telefono.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                dark
+                  ? "bg-white/10 text-white hover:bg-white/20"
+                  : "border border-wine/30 text-wine hover:bg-wine hover:text-white"
+              }`}
+            >
+              <WhatsAppIcon className="h-5 w-5" />
+              WhatsApp
+            </a>
+            <a
+              href={negocio.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                dark
+                  ? "bg-white/10 text-white hover:bg-white/20"
+                  : "border border-wine/30 text-wine hover:bg-wine hover:text-white"
+              }`}
+            >
+              <InstagramIcon className="h-5 w-5" />
+              {negocio.instagramUser}
+            </a>
+          </div>
         </div>
       </div>
       <div
