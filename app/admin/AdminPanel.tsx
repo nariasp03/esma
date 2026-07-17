@@ -21,7 +21,7 @@ const colorEstado: Record<string, string> = {
 
 const FILTROS = [
   "Próximas citas",
-  "Solicitudes",
+  "Pendientes",
   "Reagendadas",
   "Completadas",
   "Canceladas",
@@ -29,7 +29,7 @@ const FILTROS = [
 type Filtro = (typeof FILTROS)[number];
 
 // Categorías que requieren que el admin las revise (se marcan en rojo).
-const ATENCION: Filtro[] = ["Solicitudes", "Reagendadas", "Canceladas"];
+const ATENCION: Filtro[] = ["Pendientes", "Reagendadas", "Canceladas"];
 
 function hoyStr(): string {
   const d = new Date();
@@ -69,7 +69,7 @@ export default function AdminPanel({
       return reservas.filter(
         (r) => r.fecha_cita >= hoy && r.estado !== "Cancelada",
       ).length;
-    if (f === "Solicitudes") return conteos["Pendiente"] ?? 0;
+    if (f === "Pendientes") return conteos["Pendiente"] ?? 0;
     if (f === "Reagendadas") return reservas.filter((r) => r.reagendada).length;
     if (f === "Completadas") return conteos["Completada"] ?? 0;
     if (f === "Canceladas")
@@ -85,7 +85,7 @@ export default function AdminPanel({
       .filter((r) => {
         if (filtro === "Próximas citas")
           return r.fecha_cita >= hoy && r.estado !== "Cancelada";
-        if (filtro === "Solicitudes") return r.estado === "Pendiente";
+        if (filtro === "Pendientes") return r.estado === "Pendiente";
         if (filtro === "Reagendadas") return r.reagendada;
         if (filtro === "Completadas") return r.estado === "Completada";
         if (filtro === "Canceladas")
