@@ -248,7 +248,7 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
               onChange={(e) => setMotivo(e.target.value)}
               rows={2}
               maxLength={300}
-              placeholder="Cuéntanos por qué cancelas (opcional)."
+              placeholder="Cuéntanos por qué cancelas."
               className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-wine"
             />
           </div>
@@ -331,7 +331,7 @@ export default function GestionCita({ reserva }: { reserva: Datos }) {
               onChange={(e) => setNotaReagenda(e.target.value)}
               rows={2}
               maxLength={300}
-              placeholder="¿Algo que quieras avisarnos? (opcional)"
+              placeholder="¿Algo que quieras avisarnos?"
               className="mt-1 w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink outline-none focus:border-wine"
             />
           </div>
