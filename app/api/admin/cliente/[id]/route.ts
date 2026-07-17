@@ -55,10 +55,17 @@ export async function POST(
   const hora_cita = s(b.hora_cita);
   const duracion_min = Number(b.duracion_min) || 0;
   const total = Number(b.total) || 0;
+  const comprobante = typeof b.comprobante === "string" ? b.comprobante : null;
 
   if (!servicios || !fecha_cita || !hora_cita || !duracion_min) {
     return NextResponse.json(
       { ok: false, error: "Faltan datos de la cita." },
+      { status: 400 },
+    );
+  }
+  if (!comprobante) {
+    return NextResponse.json(
+      { ok: false, error: "Sube el comprobante del anticipo." },
       { status: 400 },
     );
   }
@@ -88,7 +95,7 @@ export async function POST(
     fecha_cita,
     hora_cita,
     duracion_min,
-    comprobante: null,
+    comprobante,
     metodo_pago: "transferencia",
     cliente_id: cliente.id,
     nota: s(b.nota) || null,

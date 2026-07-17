@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  servicios,
-  categorias,
-  DESCUENTO_CUMPLE,
-} from "@/app/lib/servicios";
+import { servicios, categorias } from "@/app/lib/servicios";
 import {
   nombreDia,
   formatearFecha,
@@ -63,6 +59,15 @@ function waLink(tel: string): string {
   let n = tel.replace(/\D/g, "");
   if (n.length === 10) n = "52" + n;
   return `https://wa.me/${n}`;
+}
+
+function archivoABase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 export default function ClienteModal({
@@ -308,6 +313,7 @@ function AgendarManual({
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [nota, setNota] = useState("");
+  const [comprobante, setComprobante] = useState<File | null>(null);
   const [slots, setSlots] = useState<string[]>([]);
   const [cargandoSlots, setCargandoSlots] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -345,8 +351,13 @@ function AgendarManual({
       setError("Elige servicios, día y hora.");
       return;
     }
+    if (!comprobante) {
+      setError("Sube el comprobante del anticipo.");
+      return;
+    }
     setEnviando(true);
     try {
+      const comprobanteData = await archivoABase64(comprobante);
       const r = await fetch(`/api/admin/cliente/${clienteId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -357,6 +368,7 @@ function AgendarManual({
           hora_cita: hora,
           duracion_min: totalMin,
           nota,
+          comprobante: comprobanteData,
         }),
       });
       const d = await r.json().catch(() => ({}));
@@ -490,8 +502,27 @@ function AgendarManual({
           </div>
 
           <div className="text-sm text-muted">
-            Total: ${total}{" "}
-            {DESCUENTO_CUMPLE > 0 ? "(sin descuento de cumpleaños)" : ""}
+            Total: ${total} · Anticipo: ${Math.round(total / 2)}
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-ink">
+              Comprobante del anticipo
+            </label>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              <label className="cursor-pointer rounded-full bg-wine px-5 py-2 text-xs font-semibold text-white transition-colors hover:bg-wine-light">
+                Elegir archivo
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setComprobante(e.target.files?.[0] ?? null)}
+                  className="hidden"
+                />
+              </label>
+              <span className="text-xs text-muted">
+                {comprobante ? comprobante.name : "Ningún archivo seleccionado"}
+              </span>
+            </div>
           </div>
         </>
       )}
