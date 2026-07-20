@@ -21,12 +21,16 @@ export async function GET(
   }
 
   const mensaje =
-    `¡Hola ${reserva.nombre}! Te recordamos tu cita en esma el ` +
-    `${nombreDia(reserva.fecha_cita)} ${formatearFecha(reserva.fecha_cita)} a las ` +
-    `${reserva.hora_cita} (${reserva.servicios}). Por favor responde para ` +
-    `confirmar tu asistencia; si no respondes, tomaremos tu cita como confirmada. ` +
-    `Recuerda: si cancelas con menos de 24 horas de anticipación, el anticipo no ` +
-    `es reembolsable. ¡Te esperamos con mucho gusto!`;
+    `¡Hola ${reserva.nombre}! 💅✨\n\n` +
+    `Te recordamos tu cita en *esma* 💖\n\n` +
+    `📅 ${nombreDia(reserva.fecha_cita)} ${formatearFecha(reserva.fecha_cita)}\n` +
+    `🕐 ${reserva.hora_cita}\n` +
+    `💅 ${reserva.servicios}\n\n` +
+    `✅ Por favor responde a este mensaje para *confirmar* tu asistencia. ` +
+    `Si no nos respondes, tomaremos tu cita como confirmada.\n\n` +
+    `⚠️ *Política de cancelación:* si cancelas con menos de 24 horas de ` +
+    `anticipación, el anticipo no es reembolsable.\n\n` +
+    `¡Te esperamos con mucho gusto para consentirte! 🥰`;
 
   let n = reserva.whatsapp.replace(/\D/g, "");
   if (n.length === 10) n = "52" + n; // México
