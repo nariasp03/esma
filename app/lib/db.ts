@@ -376,6 +376,7 @@ export async function citasDelDia(fecha: string): Promise<
     servicios: string;
     hora_cita: string;
     whatsapp: string;
+    token: string | null;
   }[]
 > {
   await ensureTable();
@@ -384,8 +385,9 @@ export async function citasDelDia(fecha: string): Promise<
     servicios: string;
     hora_cita: string;
     whatsapp: string;
+    token: string | null;
   }>(
-    `SELECT nombre, servicios, hora_cita, whatsapp FROM reservas
+    `SELECT nombre, servicios, hora_cita, whatsapp, token FROM reservas
      WHERE fecha_cita = $1 AND estado <> 'Cancelada'
      ORDER BY hora_cita`,
     [fecha],

@@ -96,49 +96,41 @@ type CitaDia = {
   servicios: string;
   hora_cita: string;
   whatsapp: string;
+  token: string | null;
 };
 
-// Segundos entre cada mensaje: CallMeBot los junta en un solo globo si van más
-// seguidos que ~20s. Así llegan separados (para poder reenviarlos).
-const DELAY_MENSAJES = 20000;
-
-// Mensaje de confirmación (listo para que el admin lo reenvíe a la clienta).
-function mensajeConfirmacion(c: CitaDia, fecha: string): string {
-  return (
-    `¡Hola ${c.nombre}! 💅✨\n` +
-    `Te recordamos tu cita en esma:\n` +
-    `📅 ${nombreDia(fecha)} ${formatearFecha(fecha)}\n` +
-    `🕐 ${c.hora_cita}\n` +
-    `💅 ${c.servicios}\n\n` +
-    `Por favor responde este mensaje para confirmar que sí asistirás. Si no nos respondes, daremos por hecho que tu cita sigue en pie.\n\n` +
-    `Recuerda nuestra política de cancelación: si necesitas cancelar, avísanos con al menos 24 horas de anticipación y te reembolsamos tu anticipo. Con menos tiempo, el anticipo no es reembolsable.\n\n` +
-    `¡Te esperamos con mucho gusto para consentirte! 💖`
-  );
+// Dirección base del sitio (para los links cortos del recordatorio).
+function baseUrl(): string {
+  return process.env.SITE_URL || "https://esmaags-production.up.railway.app";
 }
 
-// Recordatorio de las citas de MAÑANA (día antes, 9am): primero un resumen con
-// nombres y WhatsApps, y luego un mensaje POR CLIENTA (separados ~20s) listo
-// para que el admin lo reenvíe.
+// Link corto y limpio (a nuestro sitio) que redirige al chat de la clienta con
+// el mensaje ya escrito. Se ve limpio en WhatsApp (no el churro de código).
+function linkConfirmacion(c: CitaDia): string {
+  return `${baseUrl()}/wa/${c.token ?? ""}`;
+}
+
+// Recordatorio de las citas de MAÑANA (día antes): UN solo mensaje. Por cada
+// clienta, un link corto que abre su chat con el mensaje ya escrito (solo dar
+// Enviar). Un solo mensaje evita que CallMeBot los agrupe.
 export async function avisarRecordatorioManana(d: {
   fecha: string;
   citas: CitaDia[];
 }): Promise<void> {
   if (d.citas.length === 0) return;
-  const lista = d.citas
-    .map((c) => `• ${c.hora_cita} — ${c.nombre} — WhatsApp: ${c.whatsapp}`)
-    .join("\n");
-  const resumen =
+  const bloques = d.citas
+    .map(
+      (c, i) =>
+        `${i + 1}) ${c.hora_cita} · ${c.nombre} (${c.servicios})\n` +
+        linkConfirmacion(c),
+    )
+    .join("\n\n");
+  const texto =
     `🌅 Recordatorio esma\n` +
-    `MAÑANA (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s):\n` +
-    lista +
-    `\n\nEnseguida te mando el mensaje de cada clienta para que lo reenvíes. 👇`;
-  await enviarWhatsApp(resumen);
-
-  // Un mensaje por clienta, con pausa para que CallMeBot no los junte.
-  for (const c of d.citas) {
-    await new Promise((r) => setTimeout(r, DELAY_MENSAJES));
-    await enviarWhatsApp(mensajeConfirmacion(c, d.fecha));
-  }
+    `MAÑANA (${nombreDia(d.fecha)} ${formatearFecha(d.fecha)}) tienes ${d.citas.length} cita(s). ` +
+    `Toca el link de cada clienta: se abre su chat con el mensaje ya escrito, solo dale Enviar.\n\n` +
+    bloques;
+  await enviarWhatsApp(texto);
 }
 
 // Recordatorio de las citas de HOY (mismo día, 8am): solo el resumen.
