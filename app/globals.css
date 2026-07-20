@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Colores de marca esma: tinto, beige, negro, blanco */
-  --color-wine: #7a1f3a;
-  --color-wine-dark: #561026;
-  --color-wine-light: #a03e59;
+  /* Colores de marca esma: tinto (Instagram #571614), beige, negro, blanco */
+  --color-wine: #571614;
+  --color-wine-dark: #3d0f0d;
+  --color-wine-light: #7d2a26;
 
   --color-beige: #f5efe6;
   --color-beige-dark: #e8dccb;
