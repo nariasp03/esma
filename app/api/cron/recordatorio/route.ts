@@ -7,8 +7,8 @@ import {
 import { fechaMexico } from "@/app/lib/disponibilidad";
 
 // GET /api/cron/recordatorio?clave=SECRET[&tipo=hoy|manana]
-// Lo llama el cron a las 8am (sin tipo → manda AMBOS: las citas de hoy y las de
-// mañana). tipo=hoy / tipo=manana sirve para probar uno solo. Protegido con
+// Lo llama el cron a las 8am (sin tipo → manda el recordatorio de MAÑANA, un
+// día antes). tipo=hoy / tipo=manana sirve para probar uno solo. Protegido con
 // CRON_SECRET.
 export const dynamic = "force-dynamic";
 
@@ -46,8 +46,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, tipo: "manana", citas: n });
   }
 
-  // Sin tipo: ambos recordatorios (lo que hace el cron de las 8am).
-  const hoy = await mandarHoy();
+  // Sin tipo (lo que hace el cron de las 8am): solo el recordatorio de MAÑANA
+  // (un día antes). El del mismo día se quitó a pedido de la usuaria.
   const manana = await mandarManana();
-  return NextResponse.json({ ok: true, tipo: "ambos", hoy, manana });
+  return NextResponse.json({ ok: true, tipo: "manana", manana });
 }
