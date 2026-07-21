@@ -34,7 +34,7 @@ export default function MenuAccion({
   if (opciones.length === 0) return null;
 
   return (
-    <div ref={ref} className="relative inline-block">
+    <div ref={ref}>
       <button
         type="button"
         disabled={disabled}
@@ -47,7 +47,7 @@ export default function MenuAccion({
         />
       </button>
       {abierto && (
-        <div className="absolute right-0 z-20 mt-1 min-w-44 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-lg">
+        <div className="mt-1 w-max min-w-44 max-w-full overflow-hidden rounded-xl border border-line bg-white py-1 shadow-sm">
           {opciones.map((o, i) => (
             <button
               key={i}
