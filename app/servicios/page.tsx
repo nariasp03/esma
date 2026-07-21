@@ -91,6 +91,7 @@ export default function ServiciosPage() {
         return (
           <details
             key={cat}
+            name="categoria-servicios"
             className="group mt-6 overflow-hidden rounded-2xl border border-line"
           >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 bg-beige/60 px-5 py-4 font-display text-2xl font-bold text-wine transition-colors hover:bg-beige [&::-webkit-details-marker]:hidden">
@@ -102,7 +103,11 @@ export default function ServiciosPage() {
                 e.tipo === "simple" ? (
                   <FilaServicio key={e.s.nombre} s={e.s} />
                 ) : (
-                  <details key={e.grupo} className="group/sub">
+                  <details
+                    key={e.grupo}
+                    name="grupo-servicios"
+                    className="group/sub"
+                  >
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-medium text-ink transition-colors hover:bg-beige/40 [&::-webkit-details-marker]:hidden">
                       {e.grupo}
                       <ChevronIcon className="h-4 w-4 shrink-0 text-wine transition-transform group-open/sub:rotate-180" />

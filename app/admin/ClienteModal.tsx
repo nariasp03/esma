@@ -398,11 +398,7 @@ function AgendarManual({
               <button
                 type="button"
                 onClick={() =>
-                  setAbiertas((prev) =>
-                    prev.includes(cat)
-                      ? prev.filter((c) => c !== cat)
-                      : [...prev, cat],
-                  )
+                  setAbiertas((prev) => (prev.includes(cat) ? [] : [cat]))
                 }
                 className="flex w-full items-center justify-between gap-2 bg-white px-3 py-2 text-left text-sm"
               >

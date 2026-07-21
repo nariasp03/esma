@@ -147,16 +147,16 @@ export default function ReservaForm({
     });
   }
 
+  // Acordeón: solo una categoría abierta a la vez (al abrir otra, se cierra la
+  // anterior). Al cambiar de categoría, se cierran los grupos.
   function toggleCategoria(cat: string) {
-    setAbiertas((prev) =>
-      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
-    );
+    setAbiertas((prev) => (prev.includes(cat) ? [] : [cat]));
+    setGruposAbiertos([]);
   }
 
+  // Acordeón: solo un grupo abierto a la vez.
   function toggleGrupo(grupo: string) {
-    setGruposAbiertos((prev) =>
-      prev.includes(grupo) ? prev.filter((g) => g !== grupo) : [...prev, grupo],
-    );
+    setGruposAbiertos((prev) => (prev.includes(grupo) ? [] : [grupo]));
   }
 
   // Checkbox de un servicio. usarEtiqueta = mostrar el nombre corto (variante).
