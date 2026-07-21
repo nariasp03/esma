@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
-import { insertarReserva, ocupadosDelDia } from "@/app/lib/db";
+import {
+  insertarReserva,
+  ocupadosDelDia,
+  getClientePorId,
+  yaUsoDescuentoCumple,
+} from "@/app/lib/db";
 import { slotsDisponibles, estaAbierto } from "@/app/lib/disponibilidad";
 import { avisarNuevaReserva } from "@/app/lib/notificar";
+import { DESCUENTO_CUMPLE } from "@/app/lib/servicios";
 
 // POST /api/reservas — guarda una reserva nueva (desde el formulario público).
 export async function POST(request: Request) {
@@ -44,21 +50,44 @@ export async function POST(request: Request) {
       );
     }
 
+    // El total base (suma de servicios, antes de descuento) lo manda el cliente;
+    // el descuento y el anticipo se calculan aquí (más seguro).
+    const totalBase = Number(b.total) || 0;
+    const clienteId = typeof b.cliente_id === "number" ? b.cliente_id : null;
+
+    // Descuento de cumpleaños: 10% si la cita es en su mes de cumpleaños y no lo
+    // ha usado ya ese mes.
+    let descuento = 0;
+    if (clienteId) {
+      const cliente = await getClientePorId(clienteId);
+      if (cliente?.fecha_nacimiento) {
+        const mesCumple = Number(cliente.fecha_nacimiento.split("-")[1]);
+        const [anioCita, mesCita] = fecha_cita.split("-").map(Number);
+        if (mesCumple === mesCita) {
+          const yaUso = await yaUsoDescuentoCumple(clienteId, mesCita, anioCita);
+          if (!yaUso) descuento = Math.round((totalBase * DESCUENTO_CUMPLE) / 100);
+        }
+      }
+    }
+    const totalFinal = totalBase - descuento;
+    const anticipo = Math.round(totalFinal / 2);
+
     const { id, token } = await insertarReserva({
       nombre,
       whatsapp,
       primera_vez: !!b.primera_vez,
       fecha_nacimiento: s(b.fecha_nacimiento) || null,
       servicios: s(b.servicios),
-      total: Number(b.total) || 0,
-      anticipo: Number(b.anticipo) || 0,
+      total: totalFinal,
+      anticipo,
       fecha_cita,
       hora_cita,
       duracion_min,
       comprobante: typeof b.comprobante === "string" ? b.comprobante : null,
       metodo_pago: "transferencia",
-      cliente_id: typeof b.cliente_id === "number" ? b.cliente_id : null,
+      cliente_id: clienteId,
       nota: s(b.nota) || null,
+      descuento,
     });
 
     // Avisamos al administrador por WhatsApp (si CallMeBot está configurado).
@@ -68,7 +97,7 @@ export async function POST(request: Request) {
       servicios: s(b.servicios),
       fecha_cita,
       hora_cita,
-      anticipo: Number(b.anticipo) || 0,
+      anticipo,
       nota: s(b.nota) || null,
     });
 

@@ -1,19 +1,49 @@
 export type Servicio = {
-  nombre: string;
-  precio: number;
+  nombre: string; // nombre completo (para reservar), ej. "Gelish color liso"
+  precio: number; // precio base (sobre este se calcula el anticipo)
   duracion: string;
   duracionMin: number; // duración en minutos (para el calendario)
   categoria: string;
   nota?: string;
+  // Si el servicio pertenece a un grupo (ej. "Gelish"), en la página de
+  // servicios se muestra el grupo y al tocarlo se ven las variantes.
+  grupo?: string;
+  etiqueta?: string; // nombre corto dentro del grupo, ej. "Color liso"
+  // Texto de precio a mostrar cuando NO es un precio simple (ej. con extra).
+  precioTexto?: string;
+  // Aviso importante para la clienta (se muestra claramente al reservar).
+  aviso?: string;
 };
 
-// Todos los servicios con precio son "color liso".
 // duracionMin usa el máximo del rango, para no encimar citas.
 export const servicios: Servicio[] = [
-  { nombre: "Gelish", precio: 150, duracion: "1 h", duracionMin: 60, categoria: "Manicure", nota: "color liso" },
+  // Gelish: dos variantes agrupadas.
+  {
+    nombre: "Gelish color liso",
+    etiqueta: "Color liso",
+    grupo: "Gelish",
+    precio: 180,
+    duracion: "1 h",
+    duracionMin: 60,
+    categoria: "Manicure",
+  },
+  {
+    nombre: "Gelish diseño personalizado",
+    etiqueta: "Diseño personalizado",
+    grupo: "Gelish",
+    precio: 180,
+    precioTexto: "$180 + extra por diseño",
+    duracion: "1:30 h",
+    duracionMin: 90,
+    categoria: "Manicure",
+    aviso:
+      "El precio base es $180. El diseño personalizado tiene un costo extra que se define y se cobra EN EL LOCAL según el diseño que elijas. Tu anticipo se calcula sobre los $180 (pagas la mitad); el resto de los $180 y el extra del diseño se pagan en el local.",
+  },
+  { nombre: "Manicure ruso", precio: 120, duracion: "30 min", duracionMin: 30, categoria: "Manicure" },
   { nombre: "Nivelación con rubber", precio: 250, duracion: "1:30 h", duracionMin: 90, categoria: "Manicure", nota: "color liso" },
   { nombre: "Nivelación con builder", precio: 270, duracion: "1:30 h", duracionMin: 90, categoria: "Manicure", nota: "color liso" },
   { nombre: "Extensión de uña acrílica (largo #1 o #2)", precio: 350, duracion: "2 – 2:30 h", duracionMin: 150, categoria: "Acrílicas", nota: "color liso" },
+  { nombre: "Baño de acrílico", precio: 320, duracion: "1 h", duracionMin: 60, categoria: "Acrílicas" },
   { nombre: "Retoque de acrílico", precio: 330, duracion: "1:30 – 2 h", duracionMin: 120, categoria: "Acrílicas", nota: "color liso" },
   { nombre: "Retiro de acrílico (de otro salón)", precio: 100, duracion: "30 min", duracionMin: 30, categoria: "Retiros" },
   { nombre: "Retiro de gelish o rubber (de otro salón)", precio: 80, duracion: "15 min", duracionMin: 15, categoria: "Retiros" },
@@ -24,8 +54,8 @@ export const servicios: Servicio[] = [
 export const categorias = ["Manicure", "Acrílicas", "Retiros"] as const;
 
 // Descuento (%) que se aplica cuando la clienta reserva en el mes de su
-// cumpleaños. Cambiar aquí cuando se defina el porcentaje real.
-export const DESCUENTO_CUMPLE = 0;
+// cumpleaños (solo en UNA cita al mes).
+export const DESCUENTO_CUMPLE = 10;
 
 // Datos del negocio
 export const negocio = {

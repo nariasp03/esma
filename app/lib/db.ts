@@ -111,6 +111,11 @@ async function ensureTable() {
   await pool.query(
     `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS cancelacion_nueva BOOLEAN NOT NULL DEFAULT false;`,
   );
+  // Descuento aplicado a la cita (en $). Se usa para el descuento de cumpleaños
+  // (10% una sola vez al mes).
+  await pool.query(
+    `ALTER TABLE reservas ADD COLUMN IF NOT EXISTS descuento INTEGER NOT NULL DEFAULT 0;`,
+  );
   // Notas opcionales que deja la clienta al reservar, cancelar o reagendar.
   await pool.query(`ALTER TABLE reservas ADD COLUMN IF NOT EXISTS nota TEXT;`);
   await pool.query(
@@ -209,6 +214,24 @@ export type ReservaConNotas = Reserva & {
   nota_reagenda: string | null;
 };
 
+// ¿La clienta YA usó el descuento de cumpleaños en una cita (no cancelada) de
+// ese mes/año? Sirve para aplicarlo solo una vez al mes.
+export async function yaUsoDescuentoCumple(
+  clienteId: number,
+  mes: number,
+  anio: number,
+): Promise<boolean> {
+  await ensureTable();
+  const r = await pool.query<{ n: string }>(
+    `SELECT count(*) AS n FROM reservas
+     WHERE cliente_id = $1 AND descuento > 0 AND estado <> 'Cancelada'
+       AND EXTRACT(MONTH FROM fecha_cita) = $2
+       AND EXTRACT(YEAR FROM fecha_cita) = $3`,
+    [clienteId, mes, anio],
+  );
+  return Number(r.rows[0]?.n ?? 0) > 0;
+}
+
 export async function reservasPorCliente(
   clienteId: number,
 ): Promise<ReservaConNotas[]> {
@@ -245,6 +268,7 @@ export type NuevaReserva = {
   cliente_id: number | null;
   nota?: string | null;
   estado?: string;
+  descuento?: number;
 };
 
 export async function insertarReserva(
@@ -256,9 +280,9 @@ export async function insertarReserva(
     `INSERT INTO reservas
        (nombre, whatsapp, primera_vez, fecha_nacimiento, servicios, total,
         anticipo, fecha_cita, hora_cita, duracion_min, comprobante, metodo_pago,
-        token, cliente_id, nota, estado)
+        token, cliente_id, nota, estado, descuento)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
-             COALESCE($16, 'Pendiente'))
+             COALESCE($16, 'Pendiente'),$17)
      RETURNING id`,
     [
       r.nombre,
@@ -277,6 +301,7 @@ export async function insertarReserva(
       r.cliente_id,
       r.nota ?? null,
       r.estado ?? null,
+      r.descuento ?? 0,
     ],
   );
   return { id: res.rows[0].id as number, token };

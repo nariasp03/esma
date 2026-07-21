@@ -70,14 +70,28 @@ export default function ReservaForm({
   const elegidos = servicios.filter((s) => seleccion.includes(s.nombre));
   const totalPrecio = elegidos.reduce((a, s) => a + s.precio, 0);
   const totalMin = elegidos.reduce((a, s) => a + s.duracionMin, 0);
+  // Servicios elegidos que tienen un aviso importante (ej. diseño personalizado).
+  const avisos = elegidos.filter((s) => s.aviso);
 
-  // Descuento de cumpleaños: si el mes de la cita es el mes de nacimiento.
-  const mesCumple = cliente.fecha_nacimiento
-    ? cliente.fecha_nacimiento.split("-")[1]
-    : "";
-  const mesCita = fecha ? fecha.split("-")[1] : "";
-  const esCumpleMes = !!mesCumple && mesCumple === mesCita;
-  const descuento = esCumpleMes
+  // ¿Aplica el descuento de cumpleaños para la fecha elegida? Lo confirma el
+  // servidor (mes de cumpleaños y no usado ya ese mes).
+  const [descuentoAplica, setDescuentoAplica] = useState(false);
+  useEffect(() => {
+    if (!fecha) {
+      setDescuentoAplica(false);
+      return;
+    }
+    let cancelado = false;
+    fetch(`/api/cuenta/descuento?fecha=${fecha}`)
+      .then((r) => r.json())
+      .then((d) => !cancelado && setDescuentoAplica(!!d.aplica))
+      .catch(() => !cancelado && setDescuentoAplica(false));
+    return () => {
+      cancelado = true;
+    };
+  }, [fecha]);
+
+  const descuento = descuentoAplica
     ? Math.round((totalPrecio * DESCUENTO_CUMPLE) / 100)
     : 0;
   const totalFinal = totalPrecio - descuento;
@@ -143,8 +157,7 @@ export default function ReservaForm({
           primera_vez: false,
           fecha_nacimiento: cliente.fecha_nacimiento,
           servicios: elegidos.map((s) => s.nombre).join(" + "),
-          total: totalFinal,
-          anticipo,
+          total: totalPrecio,
           fecha_cita: fecha,
           hora_cita: hora,
           duracion_min: totalMin,
@@ -226,6 +239,22 @@ export default function ReservaForm({
             </span>
           </div>
         </div>
+
+        {avisos.length > 0 && (
+          <div className="space-y-2">
+            {avisos.map((s) => (
+              <p
+                key={s.nombre}
+                className="flex items-start gap-2 rounded-xl border border-wine/30 bg-beige/40 px-4 py-3 text-sm text-ink"
+              >
+                <AlertIcon className="mt-0.5 h-4 w-4 shrink-0 text-wine" />
+                <span>
+                  <strong>{s.nombre}:</strong> {s.aviso}
+                </span>
+              </p>
+            ))}
+          </div>
+        )}
 
         <div>
           <p className="text-sm text-muted">
@@ -338,30 +367,40 @@ export default function ReservaForm({
                       return (
                         <label
                           key={s.nombre}
-                          className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 transition-colors ${
+                          className={`block cursor-pointer rounded-xl border px-4 py-3 transition-colors ${
                             activo
                               ? "border-wine bg-beige/60"
                               : "border-line bg-white hover:border-wine/40"
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={activo}
-                              onChange={() => toggleServicio(s.nombre)}
-                              className="h-4 w-4 accent-wine"
-                            />
-                            <div>
-                              <div className="text-sm font-medium text-ink">
-                                {s.nombre}
-                              </div>
-                              <div className="flex items-center gap-1 text-xs text-muted">
-                                <ClockIcon className="h-3.5 w-3.5 text-wine" />
-                                {s.duracion}
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                checked={activo}
+                                onChange={() => toggleServicio(s.nombre)}
+                                className="h-4 w-4 accent-wine"
+                              />
+                              <div>
+                                <div className="text-sm font-medium text-ink">
+                                  {s.nombre}
+                                </div>
+                                <div className="flex items-center gap-1 text-xs text-muted">
+                                  <ClockIcon className="h-3.5 w-3.5 text-wine" />
+                                  {s.duracion}
+                                </div>
                               </div>
                             </div>
+                            <div className="shrink-0 text-right text-sm font-bold text-wine">
+                              {s.precioTexto ?? `$${s.precio}`}
+                            </div>
                           </div>
-                          <div className="font-bold text-wine">${s.precio}</div>
+                          {activo && s.aviso && (
+                            <p className="mt-2 flex items-start gap-2 rounded-lg bg-white px-3 py-2 text-xs text-ink">
+                              <AlertIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-wine" />
+                              <span>{s.aviso}</span>
+                            </p>
+                          )}
                         </label>
                       );
                     })}
@@ -435,9 +474,9 @@ export default function ReservaForm({
           <h2 className="font-display text-lg font-bold text-ink">Resumen</h2>
           <ul className="mt-3 space-y-1 text-sm text-ink">
             {elegidos.map((s) => (
-              <li key={s.nombre} className="flex justify-between">
+              <li key={s.nombre} className="flex justify-between gap-3">
                 <span>{s.nombre}</span>
-                <span>${s.precio}</span>
+                <span className="text-right">{s.precioTexto ?? `$${s.precio}`}</span>
               </li>
             ))}
           </ul>
@@ -461,6 +500,22 @@ export default function ReservaForm({
               <span>${anticipo}</span>
             </div>
           </div>
+
+          {avisos.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {avisos.map((s) => (
+                <p
+                  key={s.nombre}
+                  className="flex items-start gap-2 rounded-xl border border-wine/30 bg-white px-3 py-2 text-xs text-ink"
+                >
+                  <AlertIcon className="mt-0.5 h-4 w-4 shrink-0 text-wine" />
+                  <span>
+                    <strong>{s.nombre}:</strong> {s.aviso}
+                  </span>
+                </p>
+              ))}
+            </div>
+          )}
           {fecha && abierto && hora && (
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink">
               <span className="flex items-center gap-1.5">
