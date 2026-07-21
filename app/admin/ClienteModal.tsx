@@ -85,6 +85,30 @@ export default function ClienteModal({
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [agendando, setAgendando] = useState(false);
+  const [editandoNombre, setEditandoNombre] = useState(false);
+  const [nombreEdit, setNombreEdit] = useState("");
+  const [guardandoNombre, setGuardandoNombre] = useState(false);
+
+  async function guardarNombre() {
+    setGuardandoNombre(true);
+    setError("");
+    try {
+      const r = await fetch(`/api/admin/cliente/${clienteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: nombreEdit }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d.error || "No se pudo actualizar.");
+      setCliente(d.cliente);
+      setEditandoNombre(false);
+      onCitaCreada(); // refresca el panel
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Hubo un problema.");
+    } finally {
+      setGuardandoNombre(false);
+    }
+  }
 
   async function cargar() {
     setCargando(true);
@@ -136,9 +160,48 @@ export default function ClienteModal({
       >
         {/* Encabezado */}
         <div className="flex items-start justify-between gap-3">
-          <h2 className="font-display text-xl font-bold text-wine">
-            {cliente ? cliente.nombre : "Clienta"}
-          </h2>
+          {editandoNombre ? (
+            <div className="flex-1">
+              <input
+                value={nombreEdit}
+                onChange={(e) => setNombreEdit(e.target.value)}
+                autoFocus
+                className="w-full rounded-lg border border-line px-3 py-2 text-ink outline-none focus:border-wine"
+              />
+              <div className="mt-2 flex gap-2">
+                <button
+                  disabled={guardandoNombre}
+                  onClick={guardarNombre}
+                  className="rounded-full bg-wine px-4 py-1.5 text-sm font-semibold text-white hover:bg-wine-light disabled:opacity-50"
+                >
+                  {guardandoNombre ? "Guardando…" : "Guardar"}
+                </button>
+                <button
+                  onClick={() => setEditandoNombre(false)}
+                  className="rounded-full border border-line px-4 py-1.5 text-sm font-medium text-ink hover:bg-beige"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-xl font-bold text-wine">
+                {cliente ? cliente.nombre : "Clienta"}
+              </h2>
+              {cliente && (
+                <button
+                  onClick={() => {
+                    setNombreEdit(cliente.nombre);
+                    setEditandoNombre(true);
+                  }}
+                  className="text-xs font-medium text-wine underline hover:text-wine-light"
+                >
+                  Editar
+                </button>
+              )}
+            </div>
+          )}
           <button
             onClick={onClose}
             aria-label="Cerrar"

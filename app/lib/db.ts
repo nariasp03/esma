@@ -195,6 +195,26 @@ export async function crearCliente(
   return r.rows[0];
 }
 
+// El admin edita el nombre de la clienta. Actualiza su cuenta y también el
+// nombre en todas sus citas (para que todo quede consistente).
+export async function actualizarNombreCliente(
+  id: number,
+  nombre: string,
+): Promise<Cliente | null> {
+  await ensureTable();
+  const nombreCap = capitalizarNombre(nombre);
+  if (nombreCap.length < 3) return null;
+  await pool.query("UPDATE clientes SET nombre = $1 WHERE id = $2", [
+    nombreCap,
+    id,
+  ]);
+  await pool.query("UPDATE reservas SET nombre = $1 WHERE cliente_id = $2", [
+    nombreCap,
+    id,
+  ]);
+  return getClientePorId(id);
+}
+
 // Todas las clientas (para el panel), ordenadas por nombre.
 export async function listarClientes(): Promise<Cliente[]> {
   await ensureTable();

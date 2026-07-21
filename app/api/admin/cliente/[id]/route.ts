@@ -5,6 +5,7 @@ import {
   reservasPorCliente,
   insertarReserva,
   ocupadosDelDia,
+  actualizarNombreCliente,
 } from "@/app/lib/db";
 import { slotsDisponibles, estaAbierto } from "@/app/lib/disponibilidad";
 
@@ -103,4 +104,34 @@ export async function POST(
   });
 
   return NextResponse.json({ ok: true, id: reservaId });
+}
+
+// PATCH /api/admin/cliente/[id] — el admin edita el nombre de la clienta.
+export async function PATCH(
+  request: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  if (!(await esAdmin())) {
+    return NextResponse.json({ ok: false, error: "No autorizada." }, { status: 401 });
+  }
+  const { id: idStr } = await ctx.params;
+  const id = Number(idStr);
+  const b = await request.json().catch(() => ({}));
+  const nombre = typeof b.nombre === "string" ? b.nombre.trim() : "";
+  if (nombre.length < 3) {
+    return NextResponse.json(
+      { ok: false, error: "Escribe el nombre completo." },
+      { status: 400 },
+    );
+  }
+  const cliente = Number.isFinite(id)
+    ? await actualizarNombreCliente(id, nombre)
+    : null;
+  if (!cliente) {
+    return NextResponse.json(
+      { ok: false, error: "No se pudo actualizar." },
+      { status: 400 },
+    );
+  }
+  return NextResponse.json({ ok: true, cliente });
 }
