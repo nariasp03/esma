@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { esAdmin } from "@/app/lib/adminAuth";
-import { listarReservasAdmin } from "@/app/lib/db";
+import { listarReservasAdmin, listarClientes } from "@/app/lib/db";
 import AdminLogin from "./AdminLogin";
 import AdminPanel from "./AdminPanel";
 
@@ -17,5 +17,6 @@ export default async function AdminPage() {
     return <AdminLogin />;
   }
   const reservas = await listarReservasAdmin();
-  return <AdminPanel reservasIniciales={reservas} />;
+  const clientes = await listarClientes();
+  return <AdminPanel reservasIniciales={reservas} clientesIniciales={clientes} />;
 }

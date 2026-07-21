@@ -195,6 +195,17 @@ export async function crearCliente(
   return r.rows[0];
 }
 
+// Todas las clientas (para el panel), ordenadas por nombre.
+export async function listarClientes(): Promise<Cliente[]> {
+  await ensureTable();
+  const r = await pool.query<Cliente>(
+    `SELECT id, nombre, telefono,
+            to_char(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento
+     FROM clientes ORDER BY lower(nombre)`,
+  );
+  return r.rows;
+}
+
 export async function getClientePorId(id: number): Promise<Cliente | null> {
   await ensureTable();
   const r = await pool.query<Cliente>(

@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { ReservaAdmin } from "@/app/lib/db";
-import Calendario from "@/app/reservar/Calendario";
+import type { ReservaAdmin, Cliente } from "@/app/lib/db";
+import Calendario, { MESES } from "@/app/reservar/Calendario";
 import CalendarIcon from "@/app/components/CalendarIcon";
 import ClockIcon from "@/app/components/ClockIcon";
 import AlertIcon from "@/app/components/AlertIcon";
@@ -25,8 +25,15 @@ const FILTROS = [
   "Reagendadas",
   "Completadas",
   "Canceladas",
+  "Todas mis clientas",
 ] as const;
 type Filtro = (typeof FILTROS)[number];
+
+function cumpleTexto(f: string | null): string {
+  if (!f) return "—";
+  const [, m, d] = f.split("-");
+  return `${Number(d)} de ${MESES[Number(m) - 1]}`;
+}
 
 // Categorías que requieren que el admin las revise (se marcan en rojo).
 const ATENCION: Filtro[] = ["Pendientes", "Reagendadas", "Canceladas"];
@@ -45,8 +52,10 @@ function waLink(whatsapp: string): string {
 
 export default function AdminPanel({
   reservasIniciales,
+  clientesIniciales,
 }: {
   reservasIniciales: ReservaAdmin[];
+  clientesIniciales: Cliente[];
 }) {
   const router = useRouter();
   const [reservas, setReservas] = useState(reservasIniciales);
@@ -76,8 +85,17 @@ export default function AdminPanel({
       return reservas.filter(
         (r) => r.estado === "Cancelada" && r.cancelacion_nueva,
       ).length;
+    if (f === "Todas mis clientas") return clientesIniciales.length;
     return 0;
   }
+
+  // Clientas filtradas por la búsqueda (para la vista "Todas mis clientas").
+  const clientesVisibles = useMemo(() => {
+    const q = busqueda.trim().toLowerCase();
+    return clientesIniciales.filter((c) =>
+      q ? c.nombre.toLowerCase().includes(q) : true,
+    );
+  }, [clientesIniciales, busqueda]);
 
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
@@ -234,7 +252,42 @@ export default function AdminPanel({
       </div>
 
       {/* Lista */}
-      {visibles.length === 0 ? (
+      {filtro === "Todas mis clientas" ? (
+        clientesVisibles.length === 0 ? (
+          <p className="mt-6 rounded-2xl border border-line bg-beige/40 p-6 text-center text-sm text-muted">
+            No hay clientas para mostrar.
+          </p>
+        ) : (
+          <div className="mt-6 space-y-3">
+            {clientesVisibles.map((c) => (
+              <div
+                key={c.id}
+                className="rounded-2xl border border-line bg-white p-4"
+              >
+                <button
+                  onClick={() => setClienteId(c.id)}
+                  className="text-left font-display text-lg font-bold text-ink underline decoration-wine/40 underline-offset-2 hover:text-wine"
+                >
+                  {c.nombre}
+                </button>
+                <div className="mt-1">
+                  <a
+                    href={waLink(c.telefono)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-wine hover:underline"
+                  >
+                    WhatsApp: {c.telefono}
+                  </a>
+                </div>
+                <div className="mt-1 text-sm text-muted">
+                  Cumpleaños: {cumpleTexto(c.fecha_nacimiento)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      ) : visibles.length === 0 ? (
         <p className="mt-6 rounded-2xl border border-line bg-beige/40 p-6 text-center text-sm text-muted">
           No hay citas para mostrar.
         </p>
