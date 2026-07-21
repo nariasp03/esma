@@ -95,7 +95,7 @@ export default function PanelCliente({
           )}
           {esMesCumple && (
             <div className="mt-3 rounded-xl border border-wine/30 bg-wine/10 px-4 py-3">
-              <p className="flex items-center gap-2 font-display text-base font-bold text-wine">
+              <p className="flex items-center gap-2 text-base font-bold text-wine">
                 <GiftIcon className="h-5 w-5 shrink-0" />
                 ¡Feliz cumpleaños! Este mes es tuyo 💖
               </p>
