@@ -27,7 +27,7 @@ export const servicios: Servicio[] = [
     duracionMin: 60,
     categoria: "Manicure",
     aviso:
-      "💅 Esta opción es para tus uñas en un solo color, sin diseños. Si te gustaría agregar algún diseñito —aunque sea en una sola uñita 💖— elige mejor la opción de Diseño personalizado. ¡Así te queda justo como lo imaginas! ✨",
+      "Esta opción es para tus uñas en un solo color, sin diseños 💖. Si te gustaría agregar algún diseño —aunque sea en una sola uña— elige mejor la opción de Diseño personalizado. ¡Así te queda justo como lo imaginas! ✨",
   },
   {
     nombre: "Gelish diseño personalizado",
@@ -39,7 +39,7 @@ export const servicios: Servicio[] = [
     duracionMin: 90,
     categoria: "Manicure",
     aviso:
-      "🎨 ¡Nos encanta consentirte con un diseño único! El precio base es $180 y el diseño personalizado lleva un pequeño extra que definimos juntas en el local, según lo que elijas 💕. Por ahora solo apartas $90 (la mitad de los $180) como anticipo; el resto y el extra del diseño los pagas en tu cita. ¡Todo clarito para que disfrutes sin sorpresas! 😊",
+      "El precio base es $180 y el diseño personalizado lleva un pequeño extra que definimos juntas en el local, según lo que elijas 💕. Por ahora solo apartas con la mitad como anticipo; el resto y el extra del diseño los pagas en tu cita. ¡Todo clarito para que disfrutes sin sorpresas! 😊",
   },
   { nombre: "Manicure ruso", precio: 120, duracion: "30 min", duracionMin: 30, categoria: "Manicure" },
   { nombre: "Nivelación con rubber", precio: 250, duracion: "1:30 h", duracionMin: 90, categoria: "Manicure", nota: "color liso" },
