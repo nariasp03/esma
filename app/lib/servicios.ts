@@ -26,6 +26,8 @@ export const servicios: Servicio[] = [
     duracion: "1 h",
     duracionMin: 60,
     categoria: "Manicure",
+    aviso:
+      "Elige esta opción solo si TODAS tus uñas serán de color liso. Si quieres algún diseño (aunque sea en una sola uña), elige la opción de Diseño personalizado.",
   },
   {
     nombre: "Gelish diseño personalizado",

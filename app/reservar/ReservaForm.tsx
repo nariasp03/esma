@@ -131,9 +131,20 @@ export default function ReservaForm({
 
   function toggleServicio(nombre: string) {
     setHora("");
-    setSeleccion((prev) =>
-      prev.includes(nombre) ? prev.filter((n) => n !== nombre) : [...prev, nombre],
-    );
+    const svc = servicios.find((s) => s.nombre === nombre);
+    setSeleccion((prev) => {
+      if (prev.includes(nombre)) return prev.filter((n) => n !== nombre);
+      // Si el servicio pertenece a un grupo (ej. Gelish), quitamos las otras
+      // opciones del mismo grupo: solo se puede elegir UNA.
+      let base = prev;
+      if (svc?.grupo) {
+        const hermanas = servicios
+          .filter((s) => s.grupo === svc.grupo)
+          .map((s) => s.nombre);
+        base = prev.filter((n) => !hermanas.includes(n));
+      }
+      return [...base, nombre];
+    });
   }
 
   function toggleCategoria(cat: string) {
