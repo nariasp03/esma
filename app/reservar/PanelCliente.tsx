@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import GestionCita from "@/app/cita/[token]/GestionCita";
 import { MESES } from "./Calendario";
+import { DESCUENTO_CUMPLE } from "@/app/lib/servicios";
 import PlusIcon from "@/app/components/PlusIcon";
 import CakeIcon from "@/app/components/CakeIcon";
 import GiftIcon from "@/app/components/GiftIcon";
@@ -93,11 +94,20 @@ export default function PanelCliente({
             </p>
           )}
           {esMesCumple && (
-            <p className="mt-2 flex items-center gap-2 rounded-lg bg-wine/10 px-3 py-2 text-sm font-semibold text-wine">
-              ¡Feliz cumpleaños! Este mes es tuyo, ven a consentirte con
-              nosotras.
-              <GiftIcon className="h-4 w-4 shrink-0" />
-            </p>
+            <div className="mt-3 rounded-xl border border-wine/30 bg-wine/10 px-4 py-3">
+              <p className="flex items-center gap-2 font-display text-base font-bold text-wine">
+                <GiftIcon className="h-5 w-5 shrink-0" />
+                ¡Feliz cumpleaños! Este mes es tuyo 💖
+              </p>
+              <p className="mt-1 text-sm text-ink">
+                Como regalo, tienes{" "}
+                <strong className="text-wine">
+                  {DESCUENTO_CUMPLE}% de descuento
+                </strong>{" "}
+                en una cita durante tu mes cumpleañero. ¡Ven a consentirte con
+                nosotras! ✨
+              </p>
+            </div>
           )}
         </div>
         <button

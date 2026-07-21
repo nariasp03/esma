@@ -55,6 +55,10 @@ export default function ReservaForm({
   const [abiertas, setAbiertas] = useState<string[]>(
     inicial ? [inicial.categoria] : [],
   );
+  // Grupos (ej. "Gelish") abiertos dentro del acordeón.
+  const [gruposAbiertos, setGruposAbiertos] = useState<string[]>(
+    inicial?.grupo ? [inicial.grupo] : [],
+  );
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [slots, setSlots] = useState<string[]>([]);
@@ -135,6 +139,61 @@ export default function ReservaForm({
   function toggleCategoria(cat: string) {
     setAbiertas((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
+    );
+  }
+
+  function toggleGrupo(grupo: string) {
+    setGruposAbiertos((prev) =>
+      prev.includes(grupo) ? prev.filter((g) => g !== grupo) : [...prev, grupo],
+    );
+  }
+
+  // Checkbox de un servicio. usarEtiqueta = mostrar el nombre corto (variante).
+  function ServicioCheck({
+    s,
+    usarEtiqueta,
+  }: {
+    s: (typeof servicios)[number];
+    usarEtiqueta?: boolean;
+  }) {
+    const activo = seleccion.includes(s.nombre);
+    return (
+      <label
+        className={`block cursor-pointer rounded-xl border px-4 py-3 transition-colors ${
+          activo
+            ? "border-wine bg-beige/60"
+            : "border-line bg-white hover:border-wine/40"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={activo}
+              onChange={() => toggleServicio(s.nombre)}
+              className="h-4 w-4 accent-wine"
+            />
+            <div>
+              <div className="text-sm font-medium text-ink">
+                {usarEtiqueta ? s.etiqueta : s.nombre}
+              </div>
+              <div className="flex items-center gap-1 text-xs text-muted">
+                <ClockIcon className="h-3.5 w-3.5 text-wine" />
+                {s.duracion}
+              </div>
+            </div>
+          </div>
+          <div className="shrink-0 text-right text-sm font-bold text-wine">
+            {s.precioTexto ?? `$${s.precio}`}
+          </div>
+        </div>
+        {activo && s.aviso && (
+          <p className="mt-2 flex items-start gap-2 rounded-lg bg-white px-3 py-2 text-xs text-ink">
+            <AlertIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-wine" />
+            <span>{s.aviso}</span>
+          </p>
+        )}
+      </label>
     );
   }
 
@@ -336,6 +395,28 @@ export default function ReservaForm({
             const abierta = abiertas.includes(cat);
             const items = servicios.filter((s) => s.categoria === cat);
             const nSel = items.filter((s) => seleccion.includes(s.nombre)).length;
+            // Entradas: servicios sueltos y grupos (ej. Gelish).
+            const entradas: (
+              | { tipo: "simple"; s: (typeof servicios)[number] }
+              | {
+                  tipo: "grupo";
+                  grupo: string;
+                  items: (typeof servicios)[number][];
+                }
+            )[] = [];
+            const vistos = new Map<string, (typeof servicios)[number][]>();
+            for (const s of items) {
+              if (s.grupo) {
+                if (!vistos.has(s.grupo)) {
+                  const arr: (typeof servicios)[number][] = [];
+                  vistos.set(s.grupo, arr);
+                  entradas.push({ tipo: "grupo", grupo: s.grupo, items: arr });
+                }
+                vistos.get(s.grupo)!.push(s);
+              } else {
+                entradas.push({ tipo: "simple", s });
+              }
+            }
             return (
               <div
                 key={cat}
@@ -362,46 +443,50 @@ export default function ReservaForm({
                 </button>
                 {abierta && (
                   <div className="space-y-2 border-t border-line p-3">
-                    {items.map((s) => {
-                      const activo = seleccion.includes(s.nombre);
+                    {entradas.map((e) => {
+                      if (e.tipo === "simple") {
+                        return <ServicioCheck key={e.s.nombre} s={e.s} />;
+                      }
+                      const grupoAbierto = gruposAbiertos.includes(e.grupo);
+                      const nSelGrupo = e.items.filter((s) =>
+                        seleccion.includes(s.nombre),
+                      ).length;
                       return (
-                        <label
-                          key={s.nombre}
-                          className={`block cursor-pointer rounded-xl border px-4 py-3 transition-colors ${
-                            activo
-                              ? "border-wine bg-beige/60"
-                              : "border-line bg-white hover:border-wine/40"
-                          }`}
+                        <div
+                          key={e.grupo}
+                          className="overflow-hidden rounded-xl border border-line"
                         >
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <input
-                                type="checkbox"
-                                checked={activo}
-                                onChange={() => toggleServicio(s.nombre)}
-                                className="h-4 w-4 accent-wine"
-                              />
-                              <div>
-                                <div className="text-sm font-medium text-ink">
-                                  {s.nombre}
-                                </div>
-                                <div className="flex items-center gap-1 text-xs text-muted">
-                                  <ClockIcon className="h-3.5 w-3.5 text-wine" />
-                                  {s.duracion}
-                                </div>
-                              </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleGrupo(e.grupo)}
+                            className="flex w-full items-center justify-between gap-3 bg-white px-4 py-3 text-left transition-colors hover:bg-beige/40"
+                          >
+                            <span className="text-sm font-medium text-ink">
+                              {e.grupo}
+                              {nSelGrupo > 0 && (
+                                <span className="ml-2 text-xs font-medium text-wine">
+                                  ({nSelGrupo} elegido{nSelGrupo > 1 ? "s" : ""})
+                                </span>
+                              )}
+                            </span>
+                            <ChevronIcon
+                              className={`h-4 w-4 shrink-0 text-wine transition-transform ${
+                                grupoAbierto ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+                          {grupoAbierto && (
+                            <div className="space-y-2 border-t border-line bg-beige/30 p-2">
+                              {e.items.map((s) => (
+                                <ServicioCheck
+                                  key={s.nombre}
+                                  s={s}
+                                  usarEtiqueta
+                                />
+                              ))}
                             </div>
-                            <div className="shrink-0 text-right text-sm font-bold text-wine">
-                              {s.precioTexto ?? `$${s.precio}`}
-                            </div>
-                          </div>
-                          {activo && s.aviso && (
-                            <p className="mt-2 flex items-start gap-2 rounded-lg bg-white px-3 py-2 text-xs text-ink">
-                              <AlertIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-wine" />
-                              <span>{s.aviso}</span>
-                            </p>
                           )}
-                        </label>
+                        </div>
                       );
                     })}
                   </div>
