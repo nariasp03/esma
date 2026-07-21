@@ -5,7 +5,7 @@ import {
   reservasPorCliente,
   insertarReserva,
   ocupadosDelDia,
-  actualizarNombreCliente,
+  actualizarDatosCliente,
 } from "@/app/lib/db";
 import { slotsDisponibles, estaAbierto } from "@/app/lib/disponibilidad";
 
@@ -118,20 +118,24 @@ export async function PATCH(
   const id = Number(idStr);
   const b = await request.json().catch(() => ({}));
   const nombre = typeof b.nombre === "string" ? b.nombre.trim() : "";
-  if (nombre.length < 3) {
-    return NextResponse.json(
-      { ok: false, error: "Escribe el nombre completo." },
-      { status: 400 },
-    );
-  }
-  const cliente = Number.isFinite(id)
-    ? await actualizarNombreCliente(id, nombre)
-    : null;
-  if (!cliente) {
+  const telefono = typeof b.telefono === "string" ? b.telefono.trim() : "";
+  const fecha_nacimiento =
+    typeof b.fecha_nacimiento === "string" && b.fecha_nacimiento
+      ? b.fecha_nacimiento
+      : null;
+
+  if (!Number.isFinite(id)) {
     return NextResponse.json(
       { ok: false, error: "No se pudo actualizar." },
       { status: 400 },
     );
   }
-  return NextResponse.json({ ok: true, cliente });
+  const res = await actualizarDatosCliente(id, nombre, telefono, fecha_nacimiento);
+  if (!res.ok) {
+    return NextResponse.json(
+      { ok: false, error: res.error || "No se pudo actualizar." },
+      { status: 400 },
+    );
+  }
+  return NextResponse.json({ ok: true, cliente: res.cliente });
 }

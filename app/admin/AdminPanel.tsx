@@ -8,8 +8,8 @@ import CalendarIcon from "@/app/components/CalendarIcon";
 import ClockIcon from "@/app/components/ClockIcon";
 import AlertIcon from "@/app/components/AlertIcon";
 import CloseIcon from "@/app/components/CloseIcon";
-import CheckIcon from "@/app/components/CheckIcon";
 import ClienteModal from "./ClienteModal";
+import MenuAccion from "./MenuAccion";
 import { nombreDia, rangoFechas, formatearFecha } from "@/app/lib/disponibilidad";
 
 const colorEstado: Record<string, string> = {
@@ -489,78 +489,63 @@ function CitaCard({
         </p>
       )}
 
-      {/* Acciones */}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {(r.reagendada || r.cancelacion_nueva) && (
-          <button
-            disabled={procesando}
-            onClick={() =>
-              accion(
-                { accion: "enterada" },
-                { reagendada: false, cancelacion_nueva: false },
-              )
-            }
-            className="inline-flex items-center gap-1.5 rounded-full bg-wine px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-wine-light disabled:opacity-50"
-          >
-            <CheckIcon className="h-4 w-4" />
-            Enterada
-          </button>
-        )}
-
-        {r.tiene_comprobante && (
-          <button
-            onClick={onVerComprobante}
-            className="rounded-full border border-wine/40 px-4 py-2 text-sm font-medium text-wine transition-colors hover:bg-wine hover:text-white"
-          >
-            Ver comprobante
-          </button>
-        )}
-
-        {r.estado === "Pendiente" && (
-          <button
-            disabled={procesando}
-            onClick={() => accion({ accion: "aprobar" }, { estado: "Aprobada" })}
-            className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
-          >
-            Aprobar
-          </button>
-        )}
-
-        {r.estado === "Aprobada" && (
-          <button
-            disabled={procesando}
-            onClick={() => accion({ accion: "completar" }, { estado: "Completada" })}
-            className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-          >
-            Marcar completada
-          </button>
-        )}
-
-        {activa && !esPasada && (
-          <button
-            disabled={procesando}
-            onClick={onReagendar}
-            className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-beige disabled:opacity-50"
-          >
-            Reagendar
-          </button>
-        )}
-
-        {activa && (
-          <button
-            disabled={procesando}
-            onClick={() =>
-              accion(
-                { accion: "cancelar" },
-                { estado: "Cancelada" },
-                "¿Cancelar esta cita?",
-              )
-            }
-            className="rounded-full border border-danger/40 px-4 py-2 text-sm font-medium text-danger transition-colors hover:bg-danger hover:text-white disabled:opacity-50"
-          >
-            Cancelar
-          </button>
-        )}
+      {/* Acciones (menú desplegable "Acción") */}
+      <div className="mt-4">
+        <MenuAccion
+          disabled={procesando}
+          opciones={[
+            ...(r.tiene_comprobante
+              ? [{ label: "Ver comprobante", onClick: onVerComprobante }]
+              : []),
+            ...(r.estado === "Pendiente"
+              ? [
+                  {
+                    label: "Aprobar",
+                    onClick: () =>
+                      accion({ accion: "aprobar" }, { estado: "Aprobada" }),
+                  },
+                ]
+              : []),
+            ...(r.estado === "Aprobada"
+              ? [
+                  {
+                    label: "Marcar completada",
+                    onClick: () =>
+                      accion({ accion: "completar" }, { estado: "Completada" }),
+                  },
+                ]
+              : []),
+            ...(r.reagendada || r.cancelacion_nueva
+              ? [
+                  {
+                    label: "Enterada",
+                    onClick: () =>
+                      accion(
+                        { accion: "enterada" },
+                        { reagendada: false, cancelacion_nueva: false },
+                      ),
+                  },
+                ]
+              : []),
+            ...(activa && !esPasada
+              ? [{ label: "Reagendar", onClick: onReagendar }]
+              : []),
+            ...(activa
+              ? [
+                  {
+                    label: "Cancelar",
+                    danger: true,
+                    onClick: () =>
+                      accion(
+                        { accion: "cancelar" },
+                        { estado: "Cancelada" },
+                        "¿Cancelar esta cita?",
+                      ),
+                  },
+                ]
+              : []),
+          ]}
+        />
       </div>
     </div>
   );

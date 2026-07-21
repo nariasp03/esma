@@ -13,12 +13,15 @@ function diasDelMes(mes: string, anio: string): number {
 // Selector de fecha de nacimiento con menús (día / mes / año).
 export default function SelectorNacimiento({
   onChange,
+  valorInicial,
 }: {
   onChange: (v: string) => void;
+  valorInicial?: string | null; // "YYYY-MM-DD" para pre-cargar (al editar)
 }) {
-  const [dia, setDia] = useState("");
-  const [mes, setMes] = useState("");
-  const [anio, setAnio] = useState("");
+  const [ai, mi, di] = valorInicial ? valorInicial.split("-") : ["", "", ""];
+  const [dia, setDia] = useState(di || "");
+  const [mes, setMes] = useState(mi || "");
+  const [anio, setAnio] = useState(ai || "");
   const anioActual = new Date().getFullYear();
   const anios: number[] = [];
   for (let a = anioActual; a >= 1940; a--) anios.push(a);

@@ -14,6 +14,8 @@ import CloseIcon from "@/app/components/CloseIcon";
 import AlertIcon from "@/app/components/AlertIcon";
 import PlusIcon from "@/app/components/PlusIcon";
 import WhatsAppIcon from "@/app/components/WhatsAppIcon";
+import SelectorNacimiento from "@/app/reservar/SelectorNacimiento";
+import MenuAccion from "./MenuAccion";
 
 type Cliente = {
   id: number;
@@ -85,28 +87,42 @@ export default function ClienteModal({
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [agendando, setAgendando] = useState(false);
-  const [editandoNombre, setEditandoNombre] = useState(false);
+  const [editando, setEditando] = useState(false);
   const [nombreEdit, setNombreEdit] = useState("");
-  const [guardandoNombre, setGuardandoNombre] = useState(false);
+  const [telefonoEdit, setTelefonoEdit] = useState("");
+  const [nacimientoEdit, setNacimientoEdit] = useState("");
+  const [guardandoDatos, setGuardandoDatos] = useState(false);
 
-  async function guardarNombre() {
-    setGuardandoNombre(true);
+  function abrirEdicion() {
+    if (!cliente) return;
+    setNombreEdit(cliente.nombre);
+    setTelefonoEdit(cliente.telefono);
+    setNacimientoEdit(cliente.fecha_nacimiento ?? "");
+    setEditando(true);
+  }
+
+  async function guardarDatos() {
+    setGuardandoDatos(true);
     setError("");
     try {
       const r = await fetch(`/api/admin/cliente/${clienteId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: nombreEdit }),
+        body: JSON.stringify({
+          nombre: nombreEdit,
+          telefono: telefonoEdit,
+          fecha_nacimiento: nacimientoEdit,
+        }),
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok) throw new Error(d.error || "No se pudo actualizar.");
       setCliente(d.cliente);
-      setEditandoNombre(false);
+      setEditando(false);
       onCitaCreada(); // refresca el panel
     } catch (e) {
       setError(e instanceof Error ? e.message : "Hubo un problema.");
     } finally {
-      setGuardandoNombre(false);
+      setGuardandoDatos(false);
     }
   }
 
@@ -160,24 +176,47 @@ export default function ClienteModal({
       >
         {/* Encabezado */}
         <div className="flex items-start justify-between gap-3">
-          {editandoNombre ? (
-            <div className="flex-1">
-              <input
-                value={nombreEdit}
-                onChange={(e) => setNombreEdit(e.target.value)}
-                autoFocus
-                className="w-full rounded-lg border border-line px-3 py-2 text-ink outline-none focus:border-wine"
-              />
-              <div className="mt-2 flex gap-2">
+          {editando ? (
+            <div className="flex-1 space-y-2">
+              <div>
+                <label className="text-xs font-medium text-muted">Nombre</label>
+                <input
+                  value={nombreEdit}
+                  onChange={(e) => setNombreEdit(e.target.value)}
+                  autoFocus
+                  className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-ink outline-none focus:border-wine"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted">WhatsApp</label>
+                <input
+                  value={telefonoEdit}
+                  onChange={(e) =>
+                    setTelefonoEdit(e.target.value.replace(/[^\d\s-]/g, ""))
+                  }
+                  inputMode="numeric"
+                  className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-ink outline-none focus:border-wine"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted">
+                  Cumpleaños
+                </label>
+                <SelectorNacimiento
+                  valorInicial={nacimientoEdit || null}
+                  onChange={setNacimientoEdit}
+                />
+              </div>
+              <div className="flex gap-2 pt-1">
                 <button
-                  disabled={guardandoNombre}
-                  onClick={guardarNombre}
+                  disabled={guardandoDatos}
+                  onClick={guardarDatos}
                   className="rounded-full bg-wine px-4 py-1.5 text-sm font-semibold text-white hover:bg-wine-light disabled:opacity-50"
                 >
-                  {guardandoNombre ? "Guardando…" : "Guardar"}
+                  {guardandoDatos ? "Guardando…" : "Guardar"}
                 </button>
                 <button
-                  onClick={() => setEditandoNombre(false)}
+                  onClick={() => setEditando(false)}
                   className="rounded-full border border-line px-4 py-1.5 text-sm font-medium text-ink hover:bg-beige"
                 >
                   Cancelar
@@ -191,10 +230,7 @@ export default function ClienteModal({
               </h2>
               {cliente && (
                 <button
-                  onClick={() => {
-                    setNombreEdit(cliente.nombre);
-                    setEditandoNombre(true);
-                  }}
+                  onClick={abrirEdicion}
                   className="text-xs font-medium text-wine underline hover:text-wine-light"
                 >
                   Editar
@@ -447,23 +483,19 @@ function CitaRow({
       )}
 
       {activa && !esPasada && modo === "ver" && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
+        <div className="mt-3">
+          <MenuAccion
             disabled={procesando}
-            onClick={() => setModo("reagendar")}
-            className="rounded-full bg-wine px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-wine-light disabled:opacity-50"
-          >
-            Reagendar
-          </button>
-          <button
-            disabled={procesando}
-            onClick={() =>
-              accion({ accion: "cancelar" }, "¿Cancelar esta cita?")
-            }
-            className="rounded-full border border-danger/40 px-4 py-2 text-xs font-medium text-danger transition-colors hover:bg-danger hover:text-white disabled:opacity-50"
-          >
-            Cancelar
-          </button>
+            opciones={[
+              { label: "Reagendar", onClick: () => setModo("reagendar") },
+              {
+                label: "Cancelar",
+                danger: true,
+                onClick: () =>
+                  accion({ accion: "cancelar" }, "¿Cancelar esta cita?"),
+              },
+            ]}
+          />
         </div>
       )}
 

@@ -195,24 +195,41 @@ export async function crearCliente(
   return r.rows[0];
 }
 
-// El admin edita el nombre de la clienta. Actualiza su cuenta y también el
-// nombre en todas sus citas (para que todo quede consistente).
-export async function actualizarNombreCliente(
+// El admin edita los datos de la clienta (nombre, WhatsApp, cumpleaños).
+// Actualiza su cuenta y también el nombre/WhatsApp en todas sus citas.
+export async function actualizarDatosCliente(
   id: number,
   nombre: string,
-): Promise<Cliente | null> {
+  telefono: string,
+  fechaNacimiento: string | null,
+): Promise<{ ok: boolean; error?: string; cliente?: Cliente }> {
   await ensureTable();
   const nombreCap = capitalizarNombre(nombre);
-  if (nombreCap.length < 3) return null;
-  await pool.query("UPDATE clientes SET nombre = $1 WHERE id = $2", [
-    nombreCap,
-    id,
-  ]);
-  await pool.query("UPDATE reservas SET nombre = $1 WHERE cliente_id = $2", [
-    nombreCap,
-    id,
-  ]);
-  return getClientePorId(id);
+  if (nombreCap.length < 3)
+    return { ok: false, error: "Escribe el nombre completo." };
+  const tel = soloDigitos(telefono);
+  if (tel.length !== 10)
+    return { ok: false, error: "El WhatsApp debe tener 10 dígitos." };
+  // ¿El teléfono ya es de OTRA clienta?
+  const otro = await pool.query(
+    "SELECT id FROM clientes WHERE telefono = $1 AND id <> $2",
+    [tel, id],
+  );
+  if ((otro.rowCount ?? 0) > 0)
+    return {
+      ok: false,
+      error: "Ese WhatsApp ya está registrado con otra clienta.",
+    };
+  await pool.query(
+    "UPDATE clientes SET nombre = $1, telefono = $2, fecha_nacimiento = COALESCE($3, fecha_nacimiento) WHERE id = $4",
+    [nombreCap, tel, fechaNacimiento, id],
+  );
+  await pool.query(
+    "UPDATE reservas SET nombre = $1, whatsapp = $2 WHERE cliente_id = $3",
+    [nombreCap, tel, id],
+  );
+  const cliente = await getClientePorId(id);
+  return { ok: true, cliente: cliente ?? undefined };
 }
 
 // Todas las clientas (para el panel), ordenadas por nombre.
