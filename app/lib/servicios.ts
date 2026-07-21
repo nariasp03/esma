@@ -15,6 +15,12 @@ export type Servicio = {
   aviso?: string;
 };
 
+// Avisos reutilizables para los servicios con variantes (liso / personalizado).
+const AVISO_LISO =
+  "Esta opción es para tus uñas en un solo color, sin diseños 💖. Si te gustaría agregar algún diseño —aunque sea en una sola uña— elige mejor la opción de Diseño personalizado. ¡Así te queda justo como lo imaginas! ✨";
+const avisoPersonalizado = (base: number) =>
+  `El precio base es $${base} y el diseño personalizado lleva un pequeño extra que definimos juntas en el local, según lo que elijas 💕. Por ahora solo apartas con la mitad como anticipo; el resto y el extra del diseño los pagas en tu cita. ¡Todo clarito para que disfrutes sin sorpresas! 😊`;
+
 // duracionMin usa el máximo del rango, para no encimar citas.
 export const servicios: Servicio[] = [
   { nombre: "Manicure ruso", precio: 120, duracion: "30 min", duracionMin: 30, categoria: "Manicure" },
@@ -27,8 +33,7 @@ export const servicios: Servicio[] = [
     duracion: "1 h",
     duracionMin: 60,
     categoria: "Manicure",
-    aviso:
-      "Esta opción es para tus uñas en un solo color, sin diseños 💖. Si te gustaría agregar algún diseño —aunque sea en una sola uña— elige mejor la opción de Diseño personalizado. ¡Así te queda justo como lo imaginas! ✨",
+    aviso: AVISO_LISO,
   },
   {
     nombre: "Gelish diseño personalizado",
@@ -39,11 +44,52 @@ export const servicios: Servicio[] = [
     duracion: "1:30 h",
     duracionMin: 90,
     categoria: "Manicure",
-    aviso:
-      "El precio base es $180 y el diseño personalizado lleva un pequeño extra que definimos juntas en el local, según lo que elijas 💕. Por ahora solo apartas con la mitad como anticipo; el resto y el extra del diseño los pagas en tu cita. ¡Todo clarito para que disfrutes sin sorpresas! 😊",
+    aviso: avisoPersonalizado(180),
   },
-  { nombre: "Nivelación con rubber", precio: 250, duracion: "1:30 h", duracionMin: 90, categoria: "Manicure", nota: "color liso" },
-  { nombre: "Nivelación con builder", precio: 270, duracion: "1:30 h", duracionMin: 90, categoria: "Manicure", nota: "color liso" },
+  // Nivelación con rubber: dos variantes agrupadas.
+  {
+    nombre: "Nivelación con rubber color liso",
+    etiqueta: "Color liso",
+    grupo: "Nivelación con rubber",
+    precio: 250,
+    duracion: "1:30 h",
+    duracionMin: 90,
+    categoria: "Manicure",
+    aviso: AVISO_LISO,
+  },
+  {
+    nombre: "Nivelación con rubber diseño personalizado",
+    etiqueta: "Diseño personalizado",
+    grupo: "Nivelación con rubber",
+    precio: 250,
+    precioTexto: "$250 + extra por diseño",
+    duracion: "2:30 h",
+    duracionMin: 150,
+    categoria: "Manicure",
+    aviso: avisoPersonalizado(250),
+  },
+  // Nivelación con builder: dos variantes agrupadas.
+  {
+    nombre: "Nivelación con builder color liso",
+    etiqueta: "Color liso",
+    grupo: "Nivelación con builder",
+    precio: 270,
+    duracion: "1:30 h",
+    duracionMin: 90,
+    categoria: "Manicure",
+    aviso: AVISO_LISO,
+  },
+  {
+    nombre: "Nivelación con builder diseño personalizado",
+    etiqueta: "Diseño personalizado",
+    grupo: "Nivelación con builder",
+    precio: 270,
+    precioTexto: "$270 + extra por diseño",
+    duracion: "2:30 h",
+    duracionMin: 150,
+    categoria: "Manicure",
+    aviso: avisoPersonalizado(270),
+  },
   { nombre: "Extensión de uña acrílica (largo #1 o #2)", precio: 350, duracion: "2 – 2:30 h", duracionMin: 150, categoria: "Acrílicas", nota: "color liso" },
   { nombre: "Baño de acrílico", precio: 320, duracion: "1 h", duracionMin: 60, categoria: "Acrílicas" },
   { nombre: "Retoque de acrílico", precio: 330, duracion: "1:30 – 2 h", duracionMin: 120, categoria: "Acrílicas", nota: "color liso" },
